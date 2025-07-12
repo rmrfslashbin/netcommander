@@ -69,10 +69,13 @@ class NetCommanderAPI:
             
         # Parse current state
         parts = current_status.strip().split(",")
+        _LOGGER.debug(f"Status response: {current_status}")
         if len(parts) < 2:
             return False
             
         current_outlets = parts[1]
+        _LOGGER.debug(f"Current outlets string: '{current_outlets}'")
+        _LOGGER.debug(f"Outlet {outlet} (rly={zero_based_outlet}) current bit: '{current_outlets[zero_based_outlet] if zero_based_outlet < len(current_outlets) else 'INVALID'}')")
         if zero_based_outlet >= len(current_outlets):
             return False
             
