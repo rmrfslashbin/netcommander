@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import NetCommanderDataUpdateCoordinator
@@ -33,6 +34,14 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         self.outlet = outlet
         self._attr_name = f"Outlet {outlet}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{outlet}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"netCommander {coordinator.api.host}",
+            manufacturer="Synaccess Networks",
+            model="NP-0501DU",  # From our testing - 5-outlet model
+            sw_version="2.0.5",
+            configuration_url=f"http://{coordinator.api.host}",
+        )
 
     @property
     def is_on(self) -> bool:

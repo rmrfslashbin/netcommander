@@ -8,6 +8,7 @@ from homeassistant.const import UnitOfElectricCurrent, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import NetCommanderDataUpdateCoordinator
@@ -41,6 +42,14 @@ class NetCommanderTotalCurrentSensor(CoordinatorEntity[NetCommanderDataUpdateCoo
         super().__init__(coordinator)
         self._attr_name = "Total Current"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_total_current"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"netCommander {coordinator.api.host}",
+            manufacturer="Synaccess Networks",
+            model="NP-0501DU",
+            sw_version="2.0.5",
+            configuration_url=f"http://{coordinator.api.host}",
+        )
 
     @property
     def native_value(self) -> float:
@@ -61,6 +70,14 @@ class NetCommanderTemperatureSensor(CoordinatorEntity[NetCommanderDataUpdateCoor
         super().__init__(coordinator)
         self._attr_name = "Device Temperature"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_temperature"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"netCommander {coordinator.api.host}",
+            manufacturer="Synaccess Networks",
+            model="NP-0501DU", 
+            sw_version="2.0.5",
+            configuration_url=f"http://{coordinator.api.host}",
+        )
 
     @property
     def native_value(self) -> int:
