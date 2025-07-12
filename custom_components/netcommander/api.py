@@ -62,9 +62,30 @@ class NetCommanderAPI:
         # Convert to 0-based index (device uses 0-4, HA uses 1-5)
         zero_based_outlet = outlet - 1
         
-        # Use rly command with explicit state
-        state_value = 1 if state else 0
-        url = f"{self.base_url}/cmd.cgi?rly={zero_based_outlet}&state={state_value}"
+        # Get current state first to determine if we need to toggle
+        current_status = await self.async_get_status()
+        if current_status is None:
+            return False
+            
+        # Parse current state
+        parts = current_status.strip().split(",")
+        if len(parts) < 2:
+            return False
+            
+        current_outlets = parts[1]
+        if zero_based_outlet >= len(current_outlets):
+            return False
+            
+        current_state = current_outlets[zero_based_outlet] == "1"
+        
+        # Only send command if state needs to change
+        if current_state == state:
+            _LOGGER.debug(f"Outlet {outlet} already in desired state ({state})")
+            return True
+            
+        # Use simple toggle command (this worked in our testing)
+        url = f"{self.base_url}/cmd.cgi?rly={zero_based_outlet}"
+        _LOGGER.debug(f"Toggling outlet {outlet} (rly={zero_based_outlet}) from {current_state} to {state}")
         
         try:
             async with self._session.get(url) as resp:
