@@ -1,6 +1,8 @@
 """API for Synaccess netCommander."""
 
-import asyncio
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 import aiohttp
 
@@ -18,9 +20,11 @@ class NetCommanderAPI:
     async def async_login(self) -> bool:
         """Log in to the device."""
         url = f"{self.base_url}?$A1,{self.username},{self.password}"
+        _LOGGER.debug(f"Login URL: {url}")
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 text = await resp.text()
+                _LOGGER.debug(f"Login response: {text}")
                 return "$A0" in text
 
     async def async_get_status(self) -> str | None:
