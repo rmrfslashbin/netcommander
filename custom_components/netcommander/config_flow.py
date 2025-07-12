@@ -32,8 +32,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     api = NetCommanderAPI(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
 
-    if not await api.async_login():
-        raise InvalidAuth
+    try:
+        if not await api.async_login():
+            raise InvalidAuth
+    finally:
+        await api.async_close()
 
     return {"title": f"netCommander {data[CONF_HOST]}"}
 
