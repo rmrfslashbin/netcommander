@@ -31,6 +31,10 @@ class NetCommanderDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await self.api.close()
+
     async def _async_update_data(self):
         """Update data via library."""
         try:

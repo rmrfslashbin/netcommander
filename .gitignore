@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Home Assistant
+config/
+.storage/
+home-assistant.log
+home-assistant_v2.db
+home-assistant_v2.db-*
+
+# MacOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.log
