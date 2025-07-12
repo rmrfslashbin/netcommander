@@ -47,7 +47,7 @@ class NetCommanderTotalCurrentSensor(CoordinatorEntity[NetCommanderDataUpdateCoo
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU",
-            sw_version="2.0.7",
+            sw_version="2.0.10",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
@@ -75,7 +75,7 @@ class NetCommanderTemperatureSensor(CoordinatorEntity[NetCommanderDataUpdateCoor
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU", 
-            sw_version="2.0.7",
+            sw_version="2.0.10",
             configuration_url=f"http://{coordinator.api.host}",
         )
 

@@ -36,14 +36,18 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         """Initialize the switch."""
         super().__init__(coordinator)
         self.outlet = outlet
-        self._attr_name = f"Outlet {outlet}"
+        # Map HA outlet numbers to physical outlet numbers
+        # HA 1→HW 5, HA 2→HW 4, HA 3→HW 3, HA 4→HW 2, HA 5→HW 1
+        physical_outlet_map = {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
+        physical_outlet = physical_outlet_map[outlet]
+        self._attr_name = f"Physical Outlet {physical_outlet}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{outlet}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU",  # From our testing - 5-outlet model
-            sw_version="2.0.7",
+            sw_version="2.0.10",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
