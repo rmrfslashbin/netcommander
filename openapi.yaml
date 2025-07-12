@@ -1,0 +1,155 @@
+openapi: 3.0.0
+info:
+  title: NetCommander API
+  description: A more friendly OpenAPI specification for the Synaccess netCommander device, based on 1291_NPCStartup_v13.pdf. This spec provides a cleaner, more RESTful interface that can be mapped to the device's CGI commands.
+  version: "1.0.0"
+servers:
+  - url: http://{ip_address}
+    variables:
+      ip_address:
+        default: "192.168.1.100"
+        description: "IP address of the netCommander device."
+
+paths:
+  /login:
+    post:
+      summary: "Log in to the device"
+      description: "Corresponds to command $A1. In a real client, this would become `GET /cmd.cgi?cmd=$A1&Arg1={username}&Arg2={password}`"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: "Login successful"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$A0"
+        '401':
+          description: "Login failed"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$AF"
+
+  /logout:
+    post:
+      summary: "Log out from the device"
+      description: "Corresponds to command $A2. In a real client, this would become `GET /cmd.cgi?cmd=$A2`"
+      responses:
+        '200':
+          description: "Logout successful"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$A0"
+
+  /status:
+    get:
+      summary: "Get the status of all outlets"
+      description: "Corresponds to command $A5. In a real client, this would become `GET /cmd.cgi?cmd=$A5`"
+      responses:
+        '200':
+          description: "Status of all outlets."
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: "A string with outlet states, current draw, and temperature. e.g., xxxx,cccc,Cccc,tt"
+                example: "1111,0000,0000,25"
+
+  /outlets:
+    put:
+      summary: "Set all outlets ON or OFF"
+      description: "Corresponds to command $A7. In a real client, this would become `GET /cmd.cgi?cmd=$A7&Arg1={state}`"
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["on", "off"]
+      responses:
+        '200':
+          description: "Command successful"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$A0"
+        '400':
+          description: "Command failed"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$AF"
+
+  /outlets/{portId}/state:
+    put:
+      summary: "Set a specific outlet ON or OFF"
+      description: "Corresponds to command $A3. In a real client, this would become `GET /cmd.cgi?cmd=$A3&Arg1={portId}&Arg2={state_code}` where state_code is 1 for on, 0 for off."
+      parameters:
+        - name: portId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["on", "off"]
+      responses:
+        '200':
+          description: "Command successful"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$A0"
+        '400':
+          description: "Command failed"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$AF"
+
+  /outlets/{portId}/reboot:
+    post:
+      summary: "Reboot a specific outlet"
+      description: "Corresponds to command $A4. In a real client, this would become `GET /cmd.cgi?cmd=$A4&Arg1={portId}`"
+      parameters:
+        - name: portId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: "Command successful"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$A0"
+        '400':
+          description: "Command failed"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "$AF"

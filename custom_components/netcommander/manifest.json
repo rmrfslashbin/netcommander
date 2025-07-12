@@ -1,0 +1,11 @@
+{
+  "domain": "netcommander",
+  "name": "Synaccess netCommander",
+  "config_flow": true,
+  "documentation": "https://www.synaccess-net.com/",
+  "issue_tracker": "https://github.com/rmrfslashbin/netcommander/issues",
+  "codeowners": ["@rmrfslashbin"],
+  "version": "1.0.0",
+  "iot_class": "local_polling",
+  "requirements": ["aiohttp"]
+}
