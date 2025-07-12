@@ -59,8 +59,12 @@ class NetCommanderAPI:
         """Set the state of an outlet."""
         await self._ensure_session()
         
-        # Convert to 0-based index (device uses 0-4, HA uses 1-5)
-        zero_based_outlet = outlet - 1
+        # Convert to rly command index (device uses reverse numbering)
+        # HA outlet 1 = rly=4, HA outlet 2 = rly=3, ..., HA outlet 5 = rly=0
+        rly_index = 5 - outlet
+        
+        # For status checking, HA outlet matches string position directly
+        status_position = outlet - 1
         
         # Get current state first to determine if we need to toggle
         current_status = await self.async_get_status()
@@ -75,20 +79,20 @@ class NetCommanderAPI:
             
         current_outlets = parts[1]
         _LOGGER.debug(f"Current outlets string: '{current_outlets}'")
-        _LOGGER.debug(f"Outlet {outlet} (rly={zero_based_outlet}) current bit: '{current_outlets[zero_based_outlet] if zero_based_outlet < len(current_outlets) else 'INVALID'}')")
-        if zero_based_outlet >= len(current_outlets):
+        _LOGGER.debug(f"Outlet {outlet} (rly={rly_index}) status position {status_position}: '{current_outlets[status_position] if status_position < len(current_outlets) else 'INVALID'}')")
+        if status_position >= len(current_outlets):
             return False
             
-        current_state = current_outlets[zero_based_outlet] == "1"
+        current_state = current_outlets[status_position] == "1"
         
         # Only send command if state needs to change
         if current_state == state:
             _LOGGER.debug(f"Outlet {outlet} already in desired state ({state})")
             return True
             
-        # Use simple toggle command (this worked in our testing)
-        url = f"{self.base_url}/cmd.cgi?rly={zero_based_outlet}"
-        _LOGGER.debug(f"Toggling outlet {outlet} (rly={zero_based_outlet}) from {current_state} to {state}")
+        # Use simple toggle command with correct rly mapping
+        url = f"{self.base_url}/cmd.cgi?rly={rly_index}"
+        _LOGGER.debug(f"Toggling outlet {outlet} (rly={rly_index}) from {current_state} to {state}")
         
         try:
             async with self._session.get(url) as resp:
