@@ -43,15 +43,31 @@ class NetCommanderDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("No status returned")
 
             parts = status_str.strip().split(",")
-            outlets = parts[0]
-            currents = parts[1:5]
-            temp = parts[5]
+            
+            # Expected format: $A0,11111,0.07,XX
+            # parts[0] = "$A0" (success indicator)
+            # parts[1] = "11111" (outlet states)
+            # parts[2] = "0.07" (total current)
+            # parts[3] = "XX" (temperature or other data)
+            
+            if len(parts) < 4 or not parts[0].startswith("$A0"):
+                raise UpdateFailed(f"Invalid status response: {status_str}")
+                
+            outlets = parts[1]
+            total_current = float(parts[2])
+            temp_str = parts[3]
+            
+            # Parse temperature - handle "XX" or numeric values
+            try:
+                temperature = int(temp_str) if temp_str.isdigit() else 0
+            except (ValueError, AttributeError):
+                temperature = 0
 
             return {
                 "outlets": {i + 1: outlets[i] == "1" for i in range(len(outlets))},
                 "sensors": {
-                    "current": {i + 1: float(currents[i]) / 10.0 for i in range(len(currents))},
-                    "temperature": int(temp),
+                    "total_current": total_current,
+                    "temperature": temperature,
                 },
             }
         except Exception as exception:
