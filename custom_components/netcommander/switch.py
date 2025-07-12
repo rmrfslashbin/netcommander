@@ -1,6 +1,7 @@
 """Switch platform for Synaccess netCommander."""
 
 from __future__ import annotations
+import asyncio
 import logging
 
 from homeassistant.components.switch import SwitchEntity
@@ -42,7 +43,7 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU",  # From our testing - 5-outlet model
-            sw_version="2.0.5",
+            sw_version="2.0.7",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
@@ -59,7 +60,8 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         success = await self.coordinator.api.async_set_outlet(self.outlet, True)
         _LOGGER.debug(f"Outlet {self.outlet} turn ON result: {success}")
         if success:
-            # Force immediate refresh to update state
+            # Give device time to process command before refreshing
+            await asyncio.sleep(0.5)  # Wait 500ms
             await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -68,5 +70,6 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         success = await self.coordinator.api.async_set_outlet(self.outlet, False)
         _LOGGER.debug(f"Outlet {self.outlet} turn OFF result: {success}")
         if success:
-            # Force immediate refresh to update state
+            # Give device time to process command before refreshing
+            await asyncio.sleep(0.5)  # Wait 500ms
             await self.coordinator.async_request_refresh()
