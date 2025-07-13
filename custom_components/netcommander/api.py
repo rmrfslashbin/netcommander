@@ -103,3 +103,24 @@ class NetCommanderAPI:
         except Exception as e:
             _LOGGER.error(f"Failed to set outlet {outlet}: {e}")
             return False
+    
+    async def async_reboot_outlet(self, outlet: int) -> bool:
+        """Reboot an outlet (power cycle)."""
+        await self._ensure_session()
+        
+        # Convert to rb command index (device uses reverse numbering)
+        # HA outlet 1 = rb=4, HA outlet 2 = rb=3, ..., HA outlet 5 = rb=0
+        rb_index = 5 - outlet
+        
+        url = f"{self.base_url}/cmd.cgi?rb={rb_index}"
+        _LOGGER.debug(f"Rebooting outlet {outlet} (rb={rb_index})")
+        
+        try:
+            async with self._session.get(url) as resp:
+                if resp.status == 200:
+                    text = await resp.text()
+                    return "$A0" in text
+                return False
+        except Exception as e:
+            _LOGGER.error(f"Failed to reboot outlet {outlet}: {e}")
+            return False

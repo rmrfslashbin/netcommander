@@ -47,7 +47,7 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU",  # From our testing - 5-outlet model
-            sw_version="2.0.12",
+            sw_version="2.1.0",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
