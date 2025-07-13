@@ -47,7 +47,7 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
             model="NP-0501DU",  # From our testing - 5-outlet model
-            sw_version="2.0.10",
+            sw_version="2.0.12",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
@@ -64,8 +64,12 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         success = await self.coordinator.api.async_set_outlet(self.outlet, True)
         _LOGGER.debug(f"Outlet {self.outlet} turn ON result: {success}")
         if success:
+            # Optimistically update the state immediately
+            self.coordinator.data["outlets"][self.outlet] = True
+            self.async_write_ha_state()
+            
             # Give device time to process command before refreshing
-            await asyncio.sleep(0.5)  # Wait 500ms
+            await asyncio.sleep(1.0)  # Wait 1 second
             await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -74,6 +78,10 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], S
         success = await self.coordinator.api.async_set_outlet(self.outlet, False)
         _LOGGER.debug(f"Outlet {self.outlet} turn OFF result: {success}")
         if success:
+            # Optimistically update the state immediately
+            self.coordinator.data["outlets"][self.outlet] = False
+            self.async_write_ha_state()
+            
             # Give device time to process command before refreshing
-            await asyncio.sleep(0.5)  # Wait 500ms
+            await asyncio.sleep(1.0)  # Wait 1 second
             await self.coordinator.async_request_refresh()
