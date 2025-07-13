@@ -41,3 +41,13 @@ home-assistant_v2.db-*
 *.tmp
 *.bak
 *.log
+
+# Development files
+test_*.py
+debug_*.py
+*.egg-info/
+uv.lock
+*.html
+*.js
+*.yaml
+physical_outlet_test.md
