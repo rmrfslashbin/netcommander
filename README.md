@@ -18,8 +18,8 @@ A Home Assistant custom component for controlling Synaccess netCommander Power D
 ## Supported Devices
 
 This integration has been tested with:
-- **Synaccess netCommander NP-0501DU** (5-outlet model)
-- Other netCommander models should work with similar web interfaces
+- **Synaccess netBooter™ Model: NP-0501DU** (5-outlet model)
+- Other netCommander/netBooter models should work with similar web interfaces
 
 ## Installation via HACS
 
@@ -103,20 +103,17 @@ After adding the integration, you can configure:
 The integration creates the following entities:
 
 ### Switches
-- `switch.netcommander_outlet_1` - Outlet 1 control
-- `switch.netcommander_outlet_2` - Outlet 2 control
-- `switch.netcommander_outlet_3` - Outlet 3 control
-- `switch.netcommander_outlet_4` - Outlet 4 control  
-- `switch.netcommander_outlet_5` - Outlet 5 control
+- `switch.netcommander_outlet_1` - Physical Outlet 5 control
+- `switch.netcommander_outlet_2` - Physical Outlet 4 control
+- `switch.netcommander_outlet_3` - Physical Outlet 3 control
+- `switch.netcommander_outlet_4` - Physical Outlet 2 control  
+- `switch.netcommander_outlet_5` - Physical Outlet 1 control
 
 ### Sensors
-- `sensor.netcommander_outlet_1_current` - Outlet 1 current draw (A)
-- `sensor.netcommander_outlet_2_current` - Outlet 2 current draw (A)
-- `sensor.netcommander_outlet_3_current` - Outlet 3 current draw (A)
-- `sensor.netcommander_outlet_4_current` - Outlet 4 current draw (A)
-- `sensor.netcommander_outlet_5_current` - Outlet 5 current draw (A)
 - `sensor.netcommander_total_current` - Total current draw (A)
 - `sensor.netcommander_temperature` - Device temperature (°C)
+
+**Note**: The integration maps HA entities to physical outlets based on the device's internal numbering. Entity names display the actual physical outlet numbers.
 
 ## Troubleshooting
 
@@ -154,8 +151,10 @@ Then check **Settings** → **System** → **Logs** for detailed information.
 The integration uses the device's web interface with these endpoints:
 
 - **Status**: `GET /cmd.cgi?$A5` - Get outlet states and sensor data
-- **Control**: `GET /cmd.cgi?rly=X&state=Y` - Control outlet X (0-4) to state Y (0/1)
+- **Control**: `GET /cmd.cgi?rly=X` - Toggle outlet X (0-4, reverse mapped)
 - **Authentication**: HTTP Basic Auth with device credentials
+
+**Device Mapping**: The device uses reverse numbering where `rly=0` controls the last physical outlet.
 
 ## Development
 
