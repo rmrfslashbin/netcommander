@@ -44,11 +44,11 @@ class NetCommanderDataUpdateCoordinator(DataUpdateCoordinator):
 
             parts = status_str.strip().split(",")
             
-            # Expected format: $A0,11111,0.07,XX
+            # Expected format: $A0,XXXXX,0.07,XX (X = outlet count varies by model)
             # parts[0] = "$A0" (success indicator)
-            # parts[1] = "11111" (outlet states)
-            # parts[2] = "0.07" (total current)
-            # parts[3] = "XX" (temperature or other data)
+            # parts[1] = outlet states (length varies: 2-8 outlets typical)
+            # parts[2] = total current (float)
+            # parts[3] = temperature or other data
             
             if len(parts) < 4 or not parts[0].startswith("$A0"):
                 raise UpdateFailed(f"Invalid status response: {status_str}")

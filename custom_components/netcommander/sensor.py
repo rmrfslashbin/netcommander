@@ -46,8 +46,8 @@ class NetCommanderTotalCurrentSensor(CoordinatorEntity[NetCommanderDataUpdateCoo
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
-            model="NP-0501DU",
-            sw_version="2.1.0",
+            model="NP-0501DU",  # Tested model - may work with other netBooter/netCommander models
+            sw_version="2.1.1",
             configuration_url=f"http://{coordinator.api.host}",
         )
 
@@ -74,8 +74,8 @@ class NetCommanderTemperatureSensor(CoordinatorEntity[NetCommanderDataUpdateCoor
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=f"netCommander {coordinator.api.host}",
             manufacturer="Synaccess Networks",
-            model="NP-0501DU", 
-            sw_version="2.1.0",
+            model="NP-0501DU",  # Tested model - may work with other netBooter/netCommander models 
+            sw_version="2.1.1",
             configuration_url=f"http://{coordinator.api.host}",
         )
 

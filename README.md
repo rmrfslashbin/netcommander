@@ -17,9 +17,38 @@ A Home Assistant custom component for controlling Synaccess netCommander Power D
 
 ## Supported Devices
 
-This integration has been tested with:
+### Tested Device
+This integration has been **verified and tested** with:
 - **Synaccess netBooter™ Model: NP-0501DU** (5-outlet model)
-- Other netCommander/netBooter models should work with similar web interfaces
+
+### Compatibility with Other Models
+The integration is designed to work with **most Synaccess netCommander/netBooter devices** that feature:
+- Web interface with HTTP Basic Authentication
+- Command-line interface accessible via `/cmd.cgi` endpoint
+- Status command (`$A5`) and control commands (`rly=X`, `rb=X`)
+
+**Potentially compatible models include:**
+- Other netBooter™ series (NP-0501, NP-0201, etc.)
+- netCommander series devices
+- Models with similar web interface architecture
+
+### ⚠️ Important Notes
+- **Physical outlet mapping may vary** between models - you may need to test which HA entity controls which physical outlet
+- **Some models may require different authentication** or command formats
+- **Outlet counts will vary** - the integration dynamically detects available outlets
+
+### 🤝 Community Testing
+**Help us expand compatibility!** If you successfully use this integration with other Synaccess models:
+
+1. **Test thoroughly** - verify outlet control, monitoring, and reboot functions
+2. **Note any mapping differences** - which HA entities control which physical outlets  
+3. **Submit a pull request** or **open an issue** with:
+   - Device model number
+   - Firmware version
+   - Any configuration changes needed
+   - Outlet mapping details
+
+**Your contribution helps the community!** 🎉
 
 ## Installation via HACS
 
