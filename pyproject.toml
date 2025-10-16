@@ -1,6 +1,6 @@
 [project]
 name = "netcommander"
-version = "2025.10.03"
+version = "2025.10.16.4"
 description = "Home Assistant custom component for controlling Synaccess netCommander Power Distribution Units (PDUs)"
 authors = [{name = "Robert Sigler", email = "code@sigler.io"}]
 license = {text = "MIT"}
