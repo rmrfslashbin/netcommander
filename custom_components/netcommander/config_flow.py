@@ -1,9 +1,13 @@
-"""Config flow for Synaccess netCommander integration."""
-
+"""Config flow for Synaccess NetCommander integration."""
 from __future__ import annotations
 
 import logging
 from typing import Any
+import sys
+import os
+
+# Add bundled lib to path for netcommander library
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 import voluptuous as vol
 
@@ -13,7 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .api import NetCommanderAPI
+from netcommander import NetCommanderClient
+from netcommander.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,25 +27,43 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
+        vol.Optional(CONF_USERNAME, default="admin"): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
+    """Validate the user input allows us to connect.
 
-    api = NetCommanderAPI(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    client = NetCommanderClient(
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+    )
 
-    if not await api.async_login():
-        raise InvalidAuth
+    try:
+        # Test connection by getting device info
+        device_info = await client.get_device_info()
 
-    return {"title": f"netCommander {data[CONF_HOST]}"}
+        # Return info for unique_id and title
+        return {
+            "title": f"NetCommander {device_info.model}",
+            "unique_id": device_info.mac_address or data[CONF_HOST],
+            "model": device_info.model,
+        }
+    except AuthenticationError as err:
+        raise InvalidAuth from err
+    except NetCommanderConnectionError as err:
+        raise CannotConnect from err
+    finally:
+        await client.close()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Synaccess netCommander."""
+    """Handle a config flow for Synaccess NetCommander."""
 
     VERSION = 1
 
@@ -47,27 +71,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        errors: dict[str, str] = {}
 
-        errors = {}
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Set unique ID based on MAC address or IP
+                await self.async_set_unique_id(info["unique_id"])
+                self._abort_if_unique_id_configured()
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=user_input,
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
 

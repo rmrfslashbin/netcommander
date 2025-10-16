@@ -1,0 +1,217 @@
+[
+  {
+    "outlet_number": 1,
+    "rly_index": 0,
+    "status_position": 4,
+    "states": [
+      {
+        "stage": "initial",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_1",
+        "led_on": true,
+        "has_power": false,
+        "device_status": {
+          "raw": "$A0,00001,0.09,XX",
+          "code": "$A0",
+          "outlets": "00001",
+          "current": "0.09",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_2",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      }
+    ]
+  },
+  {
+    "outlet_number": 2,
+    "rly_index": 1,
+    "status_position": 3,
+    "states": [
+      {
+        "stage": "initial",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_1",
+        "led_on": true,
+        "has_power": false,
+        "device_status": {
+          "raw": "$A0,00010,0.09,XX",
+          "code": "$A0",
+          "outlets": "00010",
+          "current": "0.09",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_2",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      }
+    ]
+  },
+  {
+    "outlet_number": 3,
+    "rly_index": 2,
+    "status_position": 2,
+    "states": [
+      {
+        "stage": "initial",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_1",
+        "led_on": true,
+        "has_power": false,
+        "device_status": {
+          "raw": "$A0,00100,0.09,XX",
+          "code": "$A0",
+          "outlets": "00100",
+          "current": "0.09",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_2",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      }
+    ]
+  },
+  {
+    "outlet_number": 4,
+    "rly_index": 3,
+    "status_position": 1,
+    "states": [
+      {
+        "stage": "initial",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_1",
+        "led_on": true,
+        "has_power": false,
+        "device_status": {
+          "raw": "$A0,01000,0.09,XX",
+          "code": "$A0",
+          "outlets": "01000",
+          "current": "0.09",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_2",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      }
+    ]
+  },
+  {
+    "outlet_number": 5,
+    "rly_index": 4,
+    "status_position": 0,
+    "states": [
+      {
+        "stage": "initial",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_1",
+        "led_on": true,
+        "has_power": false,
+        "device_status": {
+          "raw": "$A0,10000,0.09,XX",
+          "code": "$A0",
+          "outlets": "10000",
+          "current": "0.09",
+          "temp": "XX"
+        }
+      },
+      {
+        "stage": "after_toggle_2",
+        "led_on": false,
+        "has_power": true,
+        "device_status": {
+          "raw": "$A0,00000,0.10,XX",
+          "code": "$A0",
+          "outlets": "00000",
+          "current": "0.10",
+          "temp": "XX"
+        }
+      }
+    ]
+  }
+]

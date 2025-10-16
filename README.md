@@ -1,252 +1,265 @@
-# Synaccess netCommander Home Assistant Integration
+# Synaccess NetCommander
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/release/rmrfslashbin/netcommander.svg)](https://github.com/rmrfslashbin/netcommander/releases)
 [![License](https://img.shields.io/github/license/rmrfslashbin/netcommander.svg)](LICENSE)
 
-A Home Assistant custom component for controlling Synaccess netCommander Power Distribution Units (PDUs). This integration provides real-time monitoring and control of outlet states, current draw, and device temperature.
+Complete control solution for Synaccess netCommander/netBooter Power Distribution Units (PDUs). Includes both a Home Assistant custom component and a standalone CLI tool, built on a shared async Python API client library.
 
 ## Features
 
-- 🔌 **Outlet Control**: Turn individual outlets ON/OFF
-- 📊 **Real-time Monitoring**: Current draw per outlet and total consumption
-- 🌡️ **Temperature Monitoring**: Device temperature sensors
-- 🔄 **Auto-Discovery**: Automatically detects all available outlets
-- 🛡️ **Robust Authentication**: Secure HTTP Basic Authentication
-- 📱 **Native HA Integration**: Switches, sensors, and device management
+### Home Assistant Integration
+- **Switch Entities**: Control each outlet individually (ON/OFF)
+- **Sensor Entities**: Monitor total current, temperature, and active outlet count
+- **Button Entities**: Reboot outlets (power cycle: off → wait → on)
+- **Device Info**: View model, firmware version, hardware version, and MAC address
+- **Real-time Updates**: Configurable polling interval (default: 30 seconds)
+- **UI Configuration**: Easy setup through Home Assistant's UI
+
+### CLI Tool
+- **Interactive Commands**: Control outlets, monitor status, view device info
+- **Multiple Output Formats**: Table (Rich), JSON, YAML
+- **Real-time Monitoring**: Live dashboard with auto-refresh
+- **Batch Operations**: Turn all outlets on/off at once
+- **Environment Config**: Support for `.env` files and command-line arguments
+
+### API Client Library
+- **Async First**: Built with `aiohttp` for high performance
+- **Type Safe**: Pydantic models for data validation
+- **Exception Handling**: Custom exception hierarchy
+- **Session Management**: Connection pooling and automatic cleanup
 
 ## Supported Devices
 
-### Tested Device
-This integration has been **verified and tested** with:
-- **Synaccess netBooter™ Model: NP-0501DU** (5-outlet model)
+**Tested:**
+- Synaccess netBooter NP-0501DU (5 outlets)
+  - Firmware: -7.72-8.5
+  - Hardware: 4.3
 
-### Compatibility with Other Models
-The integration is designed to work with **most Synaccess netCommander/netBooter devices** that feature:
-- Web interface with HTTP Basic Authentication
-- Command-line interface accessible via `/cmd.cgi` endpoint
-- Status command (`$A5`) and control commands (`rly=X`, `rb=X`)
+**Potentially Compatible:**
+- Other Synaccess netCommander models
+- netBooter series PDUs
 
-**Potentially compatible models include:**
-- Other netBooter™ series (NP-0501, NP-0201, etc.)
-- netCommander series devices
-- Models with similar web interface architecture
+*Please report your device compatibility results via GitHub issues!*
 
-### ⚠️ Important Notes
-- **Physical outlet mapping may vary** between models - you may need to test which HA entity controls which physical outlet
-- **Some models may require different authentication** or command formats
-- **Outlet counts will vary** - the integration dynamically detects available outlets
+## Quick Start
 
-### 🤝 Community Testing
-**Help us expand compatibility!** If you successfully use this integration with other Synaccess models:
+### Home Assistant (HACS)
 
-1. **Test thoroughly** - verify outlet control, monitoring, and reboot functions
-2. **Note any mapping differences** - which HA entities control which physical outlets  
-3. **Submit a pull request** or **open an issue** with:
-   - Device model number
-   - Firmware version
-   - Any configuration changes needed
-   - Outlet mapping details
+1. Add this repository to HACS as a custom repository
+2. Install "Synaccess NetCommander"
+3. Restart Home Assistant
+4. Add integration: Settings → Devices & Services → Add Integration → "Synaccess NetCommander"
+5. Enter device IP, username (default: `admin`), and password
 
-**Your contribution helps the community!** 🎉
+### CLI
 
-## Installation via HACS
+```bash
+# Install with uv
+git clone https://github.com/rmrfslashbin/netcommander.git
+cd netcommander
+uv venv && source .venv/bin/activate
+uv pip install -e ".[cli]"
 
-### Prerequisites
+# Create .env file
+cat > .env << EOF
+NETCOMMANDER_HOST=192.168.1.100
+NETCOMMANDER_USER=admin
+NETCOMMANDER_PASSWORD=admin
+EOF
 
-1. **HACS** must be installed in your Home Assistant instance
-2. **Network access** to your netCommander device
-3. **Device credentials** (username and password)
+# Run commands
+python -m netcommander_cli.cli status
+python -m netcommander_cli.cli outlet 1 on
+python -m netcommander_cli.cli monitor
+python -m netcommander_cli.cli info
+```
 
-### Step 1: Add Custom Repository
+## CLI Usage
 
-1. Open **HACS** in Home Assistant
-2. Go to **Integrations**
-3. Click the **three dots menu** (⋮) in the top right
-4. Select **Custom repositories**
-5. Add this repository:
-   ```
-   Repository: rmrfslashbin/netcommander
-   Category: Integration
-   ```
-6. Click **Add**
+```bash
+# Show status (table format)
+netcommander status
 
-### Step 2: Install Integration
+# Show status as JSON
+netcommander status --output json
 
-1. Search for **"Synaccess netCommander"** in HACS
-2. Click **Download**
-3. Select the latest version
-4. **Restart Home Assistant**
+# Control outlets
+netcommander outlet 1 on
+netcommander outlet 5 off
+netcommander outlet 3 toggle
 
-### Step 3: Configure Integration
+# Control all outlets
+netcommander all on
+netcommander all off
 
-1. Go to **Settings** → **Devices & Services**
-2. Click **Add Integration**
-3. Search for **"Synaccess netCommander"**
-4. Enter your device details:
-   - **Host**: IP address of your netCommander (e.g., `192.168.1.100`)
-   - **Username**: Device username (default: `admin`)
-   - **Password**: Device password
-5. Click **Submit**
+# Real-time monitoring
+netcommander monitor --interval 2
 
-## Manual Installation
+# Device information
+netcommander info
+```
 
-If you prefer manual installation:
+## Home Assistant Entities
 
-1. Download the latest release from [GitHub Releases](https://github.com/rmrfslashbin/netcommander/releases)
-2. Extract the `custom_components/netcommander` folder
-3. Copy it to your Home Assistant `custom_components` directory:
-   ```
-   config/
-   └── custom_components/
-       └── netcommander/
-           ├── __init__.py
-           ├── api.py
-           ├── config_flow.py
-           ├── const.py
-           ├── coordinator.py
-           ├── manifest.json
-           ├── sensor.py
-           └── switch.py
-   ```
-4. Restart Home Assistant
-5. Follow **Step 3** from the HACS installation
+After adding the integration, you'll get:
 
-## Configuration
+### Switches (5)
+- `switch.netcommander_outlet_1` through `switch.netcommander_outlet_5`
+- Control individual outlets
 
-### Device Setup
+### Sensors (3)
+- `sensor.netcommander_total_current` - Total current draw in Amps
+- `sensor.netcommander_temperature` - Device temperature in °C
+- `sensor.netcommander_outlets_on` - Count of powered outlets
 
-1. **Enable Web Interface**: Ensure your netCommander's web interface is accessible
-2. **Check Credentials**: Verify you can log into the device at `http://[device-ip]/`
-3. **Unlock Control** (if needed): In the device web interface, go to **Outlet Setup** and ensure **"Lock Web Outlet ON/OFF And Reboot Operation"** is **unchecked**
+### Buttons (5)
+- `button.netcommander_reboot_outlet_1` through `button.netcommander_reboot_outlet_5`
+- Power cycle outlets (useful for rebooting connected devices)
 
-### Integration Options
+## API Usage
 
-After adding the integration, you can configure:
+```python
+import asyncio
+from netcommander import NetCommanderClient
 
-- **Update Interval**: How often to poll the device (default: 30 seconds)
-- **Timeout**: Request timeout for device communication
+async def main():
+    async with NetCommanderClient("192.168.1.100", "admin", "admin") as client:
+        # Get device info
+        info = await client.get_device_info()
+        print(f"Model: {info.model}, Firmware: {info.firmware_version}")
 
-## Entities Created
+        # Get status
+        status = await client.get_status()
+        print(f"Outlet 1: {'ON' if status.outlets[1] else 'OFF'}")
+        print(f"Current: {status.total_current_amps}A")
 
-The integration creates the following entities:
+        # Control outlets
+        await client.turn_on(1)
+        await client.turn_off(5)
+        await client.toggle_outlet(3)
 
-### Switches
-- `switch.netcommander_outlet_1` - Physical Outlet 5 control
-- `switch.netcommander_outlet_2` - Physical Outlet 4 control
-- `switch.netcommander_outlet_3` - Physical Outlet 3 control
-- `switch.netcommander_outlet_4` - Physical Outlet 2 control  
-- `switch.netcommander_outlet_5` - Physical Outlet 1 control
+        # Batch operations
+        await client.turn_on_all()
 
-### Sensors
-- `sensor.netcommander_total_current` - Total current draw (A)
-- `sensor.netcommander_temperature` - Device temperature (°C)
+asyncio.run(main())
+```
 
-**Note**: The integration maps HA entities to physical outlets based on the device's internal numbering. Entity names display the actual physical outlet numbers.
+## Architecture
+
+```
+┌─────────────────────────────────────┐
+│   Home Assistant Integration        │
+│   - Config Flow                     │
+│   - Coordinator                     │
+│   - Switch/Sensor/Button Entities   │
+└──────────────┬──────────────────────┘
+               │
+               │ imports
+               ▼
+┌─────────────────────────────────────┐
+│   Shared API Client Library         │
+│   - NetCommanderClient              │
+│   - Async HTTP with aiohttp         │
+│   - Pydantic Models                 │
+│   - Custom Exceptions               │
+└──────────────┬──────────────────────┘
+               │
+               │ imports
+               ▲
+┌──────────────┴──────────────────────┐
+│   CLI Tool                           │
+│   - Click commands                   │
+│   - Rich tables & formatting        │
+│   - Real-time monitor               │
+└─────────────────────────────────────┘
+```
+
+## Device API Commands
+
+The integration uses these HTTP commands:
+- `$A5` - Get status (outlets, current, temperature)
+- `$A8` - Get device info (model, versions)
+- `$A3 {port} {value}` - Set outlet state (SPACES not commas!)
+- `rly={index}` - Toggle outlet
 
 ## Troubleshooting
 
-### Common Issues
+### Factory Reset
+If your device shows inverted logic or commands fail:
+1. Hold reset button for 20 seconds
+2. Release when status light changes
+3. Reconfigure network settings
 
-#### Authentication Failed
-- **Check credentials**: Verify username/password work in web browser
-- **Check IP address**: Ensure Home Assistant can reach the device
-- **Try default credentials**: Many devices use `admin/admin`
+### Connection Issues
+```bash
+# Test with CLI first
+python -m netcommander_cli.cli --host 192.168.1.100 --password admin info
 
-#### Control Not Working
-- **Unlock web control**: Go to device **Outlet Setup** page
-- **Uncheck "Lock Web Outlet ON/OFF And Reboot Operation"**
-- **Restart integration** after unlocking
+# Check network
+ping 192.168.1.100
 
-#### Connection Timeout
-- **Check network**: Ensure Home Assistant and device are on same network
-- **Check firewall**: Ensure port 80 is accessible
-- **Try browser test**: Access `http://[device-ip]/cmd.cgi?$A5` manually
-
-### Advanced Debugging
-
-Enable debug logging by adding to `configuration.yaml`:
-
-```yaml
-logger:
-  logs:
-    custom_components.netcommander: debug
+# Verify web interface accessible
+curl http://192.168.1.100
 ```
 
-Then check **Settings** → **System** → **Logs** for detailed information.
-
-## API Reference
-
-The integration uses the device's web interface with these endpoints:
-
-- **Status**: `GET /cmd.cgi?$A5` - Get outlet states and sensor data
-- **Control**: `GET /cmd.cgi?rly=X` - Toggle outlet X (0-4, reverse mapped)
-- **Authentication**: HTTP Basic Auth with device credentials
-
-**Device Mapping**: The device uses reverse numbering where `rly=0` controls the last physical outlet.
+See [INSTALLATION.md](INSTALLATION.md) for detailed troubleshooting.
 
 ## Development
 
-### Setting Up Development Environment
+```bash
+# Clone and setup
+git clone https://github.com/rmrfslashbin/netcommander.git
+cd netcommander
+uv venv && source .venv/bin/activate
 
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/rmrfslashbin/netcommander.git
-   cd netcommander
-   ```
+# Install all dependencies
+uv pip install -e ".[cli,ha,dev]"
 
-2. **Set up environment**:
-   ```bash
-   uv venv
-   source .venv/bin/activate
-   uv pip install -r requirements-dev.txt
-   ```
+# Run tests
+make test
 
-3. **Configure credentials**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your device details
-   ```
+# Lint
+make lint
+```
 
-4. **Run tests**:
-   ```bash
-   python test_auth.py  # Test authentication
-   python netcommander_api.py  # Test full API
-   ```
-
-### Project Structure
+## Project Structure
 
 ```
 netcommander/
-├── custom_components/netcommander/  # Home Assistant integration
-├── netcommander_api.py             # Standalone API client
-├── test_*.py                       # Test scripts
-├── CONTROL-FINDINGS.md             # Technical analysis
-├── DEV-SETUP.md                   # Development guide
-└── requirements-dev.txt           # Development dependencies
+├── src/netcommander/          # Shared API client library
+│   ├── client.py              # Main async client
+│   ├── models.py              # Pydantic data models
+│   ├── exceptions.py          # Custom exceptions
+│   └── const.py               # Constants
+├── netcommander_cli/          # CLI tool
+│   └── cli.py                 # Click commands
+├── custom_components/         # Home Assistant integration
+│   └── netcommander/
+│       ├── __init__.py        # Integration setup
+│       ├── manifest.json      # Integration metadata
+│       ├── config_flow.py     # UI configuration
+│       ├── coordinator.py     # Data coordinator
+│       ├── switch.py          # Switch entities
+│       ├── sensor.py          # Sensor entities
+│       └── button.py          # Button entities
+└── tests/                     # Test scripts
 ```
 
 ## Contributing
 
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Test** thoroughly
-5. **Submit** a pull request
+Contributions welcome! Please:
+1. Test with your device and report compatibility
+2. Submit issues for bugs or feature requests
+3. Create pull requests with improvements
+
+## Author
+
+Robert Sigler (code@sigler.io)
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This is an unofficial integration. Synaccess Networks is not affiliated with this project. Use at your own risk.
-
-## Support
-
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/rmrfslashbin/netcommander/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/rmrfslashbin/netcommander/discussions)
-- 📖 **Documentation**: [Technical Findings](CONTROL-FINDINGS.md)
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 

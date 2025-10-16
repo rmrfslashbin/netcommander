@@ -1,6 +1,5 @@
 {
-  "name": "Synaccess netBooter™",
-  "content_in_root": false,
+  "name": "Synaccess NetCommander",
   "render_readme": true,
-  "domains": ["switch", "sensor", "button"]
+  "homeassistant": "2024.1.0"
 }

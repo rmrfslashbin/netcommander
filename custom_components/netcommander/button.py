@@ -1,6 +1,6 @@
-"""Button platform for Synaccess netCommander."""
-
+"""Button platform for Synaccess NetCommander outlet reboot."""
 from __future__ import annotations
+
 import logging
 
 from homeassistant.components.button import ButtonEntity
@@ -8,10 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN
-from .coordinator import NetCommanderDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER, ATTR_OUTLET_NUMBER
+from .coordinator import NetCommanderCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,40 +20,49 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the netCommander buttons."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        NetCommanderRebootButton(coordinator, outlet)
-        for outlet in coordinator.data["outlets"])
+    """Set up NetCommander buttons."""
+    coordinator: NetCommanderCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    # Create reboot button for each outlet (1-5)
+    entities = [
+        NetCommanderRebootButton(coordinator, entry, outlet_num)
+        for outlet_num in range(1, 6)
+    ]
+
+    async_add_entities(entities)
 
 
-class NetCommanderRebootButton(CoordinatorEntity[NetCommanderDataUpdateCoordinator], ButtonEntity):
-    """Representation of a netCommander reboot button."""
+class NetCommanderRebootButton(CoordinatorEntity[NetCommanderCoordinator], ButtonEntity):
+    """Representation of a NetCommander outlet reboot button."""
 
-    def __init__(self, coordinator: NetCommanderDataUpdateCoordinator, outlet: int) -> None:
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:restart"
+
+    def __init__(
+        self,
+        coordinator: NetCommanderCoordinator,
+        entry: ConfigEntry,
+        outlet_number: int,
+    ) -> None:
         """Initialize the button."""
         super().__init__(coordinator)
-        self.outlet = outlet
-        # Map HA outlet numbers to physical outlet numbers
-        # HA 1→HW 5, HA 2→HW 4, HA 3→HW 3, HA 4→HW 2, HA 5→HW 1
-        physical_outlet_map = {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
-        physical_outlet = physical_outlet_map[outlet]
-        self._attr_name = f"Reboot Physical Outlet {physical_outlet}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{outlet}_reboot"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=f"netCommander {coordinator.api.host}",
-            manufacturer="Synaccess Networks",
-            model="NP-0501DU",  # Tested model - may work with other netBooter/netCommander models
-            sw_version="2.1.1",
-            configuration_url=f"http://{coordinator.api.host}",
-        )
+        self.outlet_number = outlet_number
+        self._attr_unique_id = f"{entry.entry_id}_reboot_{outlet_number}"
+        self._attr_name = f"Reboot Outlet {outlet_number}"
+
+        # Device info
+        device_info = coordinator.device_info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": f"{MANUFACTURER} {device_info.model if device_info else 'NetCommander'}",
+            "manufacturer": MANUFACTURER,
+            "model": device_info.model if device_info else "Unknown",
+            "sw_version": device_info.firmware_version if device_info else None,
+            "hw_version": device_info.hardware_version if device_info else None,
+            "connections": {("mac", device_info.mac_address)} if device_info and device_info.mac_address else set(),
+        }
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        _LOGGER.debug(f"Rebooting outlet {self.outlet}")
-        success = await self.coordinator.api.async_reboot_outlet(self.outlet)
-        _LOGGER.debug(f"Outlet {self.outlet} reboot result: {success}")
-        if success:
-            # Refresh status after a delay to catch state changes
-            await self.coordinator.async_request_refresh()
+        _LOGGER.info("Rebooting outlet %d", self.outlet_number)
+        await self.coordinator.async_reboot_outlet(self.outlet_number)

@@ -1,20 +1,19 @@
-"""Switch platform for Synaccess netCommander."""
-
+"""Switch platform for Synaccess NetCommander outlets."""
 from __future__ import annotations
-import asyncio
+
+from typing import Any
 import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, ATTR_OUTLET_NUMBER
+from .coordinator import NetCommanderCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-from .coordinator import NetCommanderDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -22,66 +21,65 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the netCommander switches."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        NetCommanderSwitch(coordinator, outlet)
-        for outlet in coordinator.data["outlets"])
+    """Set up NetCommander switches."""
+    coordinator: NetCommanderCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    # Create switch for each outlet (1-5)
+    entities = [
+        NetCommanderSwitch(coordinator, entry, outlet_num)
+        for outlet_num in range(1, 6)
+    ]
+
+    async_add_entities(entities)
 
 
-class NetCommanderSwitch(CoordinatorEntity[NetCommanderDataUpdateCoordinator], SwitchEntity):
-    """Representation of a netCommander switch."""
+class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntity):
+    """Representation of a NetCommander outlet switch."""
 
-    def __init__(self, coordinator: NetCommanderDataUpdateCoordinator, outlet: int) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: NetCommanderCoordinator,
+        entry: ConfigEntry,
+        outlet_number: int,
+    ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
-        self.outlet = outlet
-        # Map HA outlet numbers to physical outlet numbers
-        # HA 1→HW 5, HA 2→HW 4, HA 3→HW 3, HA 4→HW 2, HA 5→HW 1
-        physical_outlet_map = {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
-        physical_outlet = physical_outlet_map[outlet]
-        self._attr_name = f"Physical Outlet {physical_outlet}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{outlet}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=f"netCommander {coordinator.api.host}",
-            manufacturer="Synaccess Networks",
-            model="NP-0501DU",  # Tested model - may work with other netBooter/netCommander models
-            sw_version="2.1.1",
-            configuration_url=f"http://{coordinator.api.host}",
-        )
+        self.outlet_number = outlet_number
+        self._attr_unique_id = f"{entry.entry_id}_outlet_{outlet_number}"
+        self._attr_name = f"Outlet {outlet_number}"
+
+        # Device info
+        device_info = coordinator.device_info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": f"{MANUFACTURER} {device_info.model if device_info else 'NetCommander'}",
+            "manufacturer": MANUFACTURER,
+            "model": device_info.model if device_info else "Unknown",
+            "sw_version": device_info.firmware_version if device_info else None,
+            "hw_version": device_info.hardware_version if device_info else None,
+            "connections": {("mac", device_info.mac_address)} if device_info and device_info.mac_address else set(),
+        }
 
     @property
     def is_on(self) -> bool:
-        """Return true if the switch is on."""
-        state = self.coordinator.data["outlets"].get(self.outlet, False)
-        _LOGGER.debug(f"Outlet {self.outlet} state check: {state} (data: {self.coordinator.data['outlets']})")
-        return state
+        """Return true if outlet is on."""
+        if self.coordinator.data:
+            return self.coordinator.data.outlets.get(self.outlet_number, False)
+        return False
 
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the switch on."""
-        _LOGGER.debug(f"Turning outlet {self.outlet} ON")
-        success = await self.coordinator.api.async_set_outlet(self.outlet, True)
-        _LOGGER.debug(f"Outlet {self.outlet} turn ON result: {success}")
-        if success:
-            # Optimistically update the state immediately
-            self.coordinator.data["outlets"][self.outlet] = True
-            self.async_write_ha_state()
-            
-            # Give device time to process command before refreshing
-            await asyncio.sleep(1.0)  # Wait 1 second
-            await self.coordinator.async_request_refresh()
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        return {
+            ATTR_OUTLET_NUMBER: self.outlet_number,
+        }
 
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the switch off."""
-        _LOGGER.debug(f"Turning outlet {self.outlet} OFF")
-        success = await self.coordinator.api.async_set_outlet(self.outlet, False)
-        _LOGGER.debug(f"Outlet {self.outlet} turn OFF result: {success}")
-        if success:
-            # Optimistically update the state immediately
-            self.coordinator.data["outlets"][self.outlet] = False
-            self.async_write_ha_state()
-            
-            # Give device time to process command before refreshing
-            await asyncio.sleep(1.0)  # Wait 1 second
-            await self.coordinator.async_request_refresh()
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the outlet on."""
+        await self.coordinator.async_turn_on(self.outlet_number)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the outlet off."""
+        await self.coordinator.async_turn_off(self.outlet_number)

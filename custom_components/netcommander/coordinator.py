@@ -1,74 +1,110 @@
-"""DataUpdateCoordinator for Synaccess netCommander."""
+"""Data update coordinator for NetCommander."""
+from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
+import sys
+import os
+
+# Add bundled lib to path for netcommander library
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import NetCommanderAPI
-from .const import DOMAIN
+from netcommander import NetCommanderClient, DeviceStatus, DeviceInfo
+from netcommander.exceptions import NetCommanderError
+
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class NetCommanderDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the API."""
+class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
+    """Coordinator to manage fetching NetCommander data."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.api = NetCommanderAPI(
-            entry.data[CONF_HOST],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        username: str,
+        password: str,
+        scan_interval: int = DEFAULT_SCAN_INTERVAL,
+    ) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=scan_interval),
         )
+        self.host = host
+        self.username = username
+        self.password = password
+        self.client = NetCommanderClient(host, username, password)
+        self.device_info: DeviceInfo | None = None
+
+    async def _async_update_data(self) -> DeviceStatus:
+        """Fetch data from the device."""
+        try:
+            # Get device info on first update
+            if self.device_info is None:
+                self.device_info = await self.client.get_device_info()
+                _LOGGER.debug(
+                    "Device info retrieved: %s %s",
+                    self.device_info.model,
+                    self.device_info.firmware_version,
+                )
+
+            # Get current status
+            status = await self.client.get_status()
+            _LOGGER.debug(
+                "Status updated: %d outlets on, %.2fA current",
+                len(status.outlets_on),
+                status.total_current_amps,
+            )
+            return status
+
+        except NetCommanderError as err:
+            raise UpdateFailed(f"Error communicating with device: {err}") from err
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
-        await self.api.close()
+        await self.client.close()
 
-    async def _async_update_data(self):
-        """Update data via library."""
+    async def async_turn_on(self, outlet_number: int) -> bool:
+        """Turn on an outlet."""
         try:
-            status_str = await self.api.async_get_status()
-            if status_str is None:
-                raise UpdateFailed("No status returned")
+            result = await self.client.turn_on(outlet_number)
+            await self.async_request_refresh()
+            return result
+        except NetCommanderError as err:
+            _LOGGER.error("Failed to turn on outlet %d: %s", outlet_number, err)
+            return False
 
-            parts = status_str.strip().split(",")
-            
-            # Expected format: $A0,XXXXX,0.07,XX (X = outlet count varies by model)
-            # parts[0] = "$A0" (success indicator)
-            # parts[1] = outlet states (length varies: 2-8 outlets typical)
-            # parts[2] = total current (float)
-            # parts[3] = temperature or other data
-            
-            if len(parts) < 4 or not parts[0].startswith("$A0"):
-                raise UpdateFailed(f"Invalid status response: {status_str}")
-                
-            outlets = parts[1]
-            total_current = float(parts[2])
-            temp_str = parts[3]
-            
-            # Parse temperature - handle "XX" or numeric values
-            try:
-                temperature = int(temp_str) if temp_str.isdigit() else 0
-            except (ValueError, AttributeError):
-                temperature = 0
+    async def async_turn_off(self, outlet_number: int) -> bool:
+        """Turn off an outlet."""
+        try:
+            result = await self.client.turn_off(outlet_number)
+            await self.async_request_refresh()
+            return result
+        except NetCommanderError as err:
+            _LOGGER.error("Failed to turn off outlet %d: %s", outlet_number, err)
+            return False
 
-            return {
-                "outlets": {i + 1: outlets[i] == "1" for i in range(len(outlets))},
-                "sensors": {
-                    "total_current": total_current,
-                    "temperature": temperature,
-                },
-            }
-        except Exception as exception:
-            raise UpdateFailed(f"Error communicating with API: {exception}") from exception
+    async def async_reboot_outlet(self, outlet_number: int) -> bool:
+        """Reboot an outlet (off, wait, on)."""
+        try:
+            # Turn off
+            await self.client.turn_off(outlet_number)
+            # Wait 5 seconds
+            import asyncio
+            await asyncio.sleep(5)
+            # Turn on
+            result = await self.client.turn_on(outlet_number)
+            await self.async_request_refresh()
+            return result
+        except NetCommanderError as err:
+            _LOGGER.error("Failed to reboot outlet %d: %s", outlet_number, err)
+            return False

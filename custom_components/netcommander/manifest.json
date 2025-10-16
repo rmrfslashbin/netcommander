@@ -1,11 +1,13 @@
 {
   "domain": "netcommander",
-  "name": "Synaccess netCommander",
-  "config_flow": true,
-  "documentation": "https://www.synaccess-net.com/",
-  "issue_tracker": "https://github.com/rmrfslashbin/netcommander/issues",
+  "name": "Synaccess NetCommander",
   "codeowners": ["@rmrfslashbin"],
-  "version": "2.1.1",
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/rmrfslashbin/netcommander",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["aiohttp"]
+  "issue_tracker": "https://github.com/rmrfslashbin/netcommander/issues",
+  "requirements": ["aiohttp>=3.9.0", "pydantic>=1.10.0"],
+  "version": "2025.10.15"
 }
