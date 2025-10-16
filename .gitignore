@@ -21,6 +21,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# BUT allow the integration's bundled library
+!custom_components/netcommander/lib/
 parts/
 sdist/
 var/

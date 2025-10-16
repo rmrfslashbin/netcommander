@@ -1,12 +1,6 @@
 """Sensor platform for Synaccess NetCommander."""
 from __future__ import annotations
 
-import sys
-import os
-
-# Add bundled lib to path BEFORE any other imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -24,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from netcommander_lib import DeviceStatus
+from .lib.netcommander_lib import DeviceStatus
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import NetCommanderCoordinator

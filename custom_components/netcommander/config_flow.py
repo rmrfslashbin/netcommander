@@ -1,12 +1,6 @@
 """Config flow for Synaccess NetCommander integration."""
 from __future__ import annotations
 
-import sys
-import os
-
-# Add bundled lib to path BEFORE any other imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-
 import logging
 from typing import Any
 
@@ -18,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from netcommander_lib import NetCommanderClient
-from netcommander_lib.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
+from .lib.netcommander_lib import NetCommanderClient
+from .lib.netcommander_lib.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
 
 from .const import DOMAIN
 

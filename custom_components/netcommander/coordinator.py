@@ -1,12 +1,6 @@
 """Data update coordinator for NetCommander."""
 from __future__ import annotations
 
-import sys
-import os
-
-# Add bundled lib to path BEFORE any other imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-
 from datetime import timedelta
 import logging
 
@@ -14,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
-from netcommander_lib.exceptions import NetCommanderError
+from .lib.netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
+from .lib.netcommander_lib.exceptions import NetCommanderError
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
