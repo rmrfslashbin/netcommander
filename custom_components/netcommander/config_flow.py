@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .lib.netcommander_lib import NetCommanderClient
 from .lib.netcommander_lib.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +116,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Extract scan_interval for options
+            scan_interval = user_input.pop(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
             # Validate the new credentials
             try:
                 await validate_input(self.hass, user_input)
@@ -127,17 +130,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Update the config entry with new data
+                # Update the config entry with new data and options
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=user_input,
+                    options={CONF_SCAN_INTERVAL: scan_interval},
                 )
+                # Reload the integration to apply new scan interval
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 return self.async_create_entry(title="", data={})
 
         # Pre-fill with current values
         current_host = self.config_entry.data.get(CONF_HOST, "")
         current_username = self.config_entry.data.get(CONF_USERNAME, "admin")
         current_password = self.config_entry.data.get(CONF_PASSWORD, "")
+        current_scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -146,6 +155,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(CONF_HOST, default=current_host): str,
                     vol.Optional(CONF_USERNAME, default=current_username): str,
                     vol.Required(CONF_PASSWORD, default=current_password): str,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=current_scan_interval
+                    ): vol.All(vol.Coerce(int), vol.Range(min=10, max=300)),
                 }
             ),
             errors=errors,

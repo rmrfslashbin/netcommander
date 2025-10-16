@@ -55,7 +55,7 @@ class DeviceStatus(BaseModel):
     """Complete device status including all outlets and metrics."""
 
     outlets: dict[int, bool] = Field(
-        description="Outlet states keyed by outlet number (1-5)"
+        description="Outlet states keyed by outlet number"
     )
     total_current_amps: float = Field(
         ge=0.0, description="Total current draw in Amps"
@@ -67,9 +67,13 @@ class DeviceStatus(BaseModel):
 
     @validator("outlets")
     def validate_outlets(cls, v: dict[int, bool]) -> dict[int, bool]:
-        """Ensure all 5 outlets are present."""
-        expected_outlets = set(range(1, 6))
+        """Ensure outlets are sequentially numbered from 1."""
+        if not v:
+            raise ValueError("No outlets found")
+
         actual_outlets = set(v.keys())
+        expected_count = len(v)
+        expected_outlets = set(range(1, expected_count + 1))
 
         if actual_outlets != expected_outlets:
             raise ValueError(
@@ -77,6 +81,11 @@ class DeviceStatus(BaseModel):
             )
 
         return v
+
+    @property
+    def num_outlets(self) -> int:
+        """Get number of outlets on this device."""
+        return len(self.outlets)
 
     def get_outlet_state(self, outlet_number: int) -> bool:
         """Get state of specific outlet."""

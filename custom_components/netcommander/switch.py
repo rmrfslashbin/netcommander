@@ -24,12 +24,18 @@ async def async_setup_entry(
     """Set up NetCommander switches."""
     coordinator: NetCommanderCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Create switch for each outlet (1-5)
+    # Wait for first data refresh to determine outlet count
+    if coordinator.data is None:
+        await coordinator.async_config_entry_first_refresh()
+
+    # Create switch for each outlet dynamically based on device
+    num_outlets = coordinator.data.num_outlets if coordinator.data else 5
     entities = [
         NetCommanderSwitch(coordinator, entry, outlet_num)
-        for outlet_num in range(1, 6)
+        for outlet_num in range(1, num_outlets + 1)
     ]
 
+    _LOGGER.info("Setting up %d outlet switches", num_outlets)
     async_add_entities(entities)
 
 

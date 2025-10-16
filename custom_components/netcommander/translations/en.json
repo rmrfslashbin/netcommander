@@ -24,11 +24,12 @@
     "step": {
       "init": {
         "title": "Update Device Settings",
-        "description": "Update the connection details for your NetCommander device. Changes will take effect after saving.",
+        "description": "Update the connection details and polling interval for your NetCommander device. Changes will take effect after saving.",
         "data": {
           "host": "IP Address or Hostname",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "scan_interval": "Update Interval (seconds, 10-300)"
         }
       }
     },

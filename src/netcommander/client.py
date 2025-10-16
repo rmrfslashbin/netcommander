@@ -1,5 +1,6 @@
 """Async HTTP client for Synaccess netCommander API."""
 
+import asyncio
 import logging
 import re
 from typing import Optional
@@ -146,6 +147,8 @@ class NetCommanderClient:
 
                 return response
 
+        except asyncio.TimeoutError as e:
+            raise ConnectionError(self.host, f"Connection timeout after {self.timeout}s")
         except aiohttp.ClientConnectorError as e:
             raise ConnectionError(self.host, f"Connection failed: {e}")
         except aiohttp.ClientError as e:
@@ -156,7 +159,7 @@ class NetCommanderClient:
 
         Format: $A0,XXXXX,C.CC,TT
         - $A0: Success code
-        - XXXXX: 5-char outlet string (1=ON, 0=OFF)
+        - XXXXX: N-char outlet string (1=ON, 0=OFF) - length determines outlet count
         - C.CC: Current in Amps
         - TT: Temperature (or 'XX')
 
@@ -180,17 +183,21 @@ class NetCommanderClient:
             if not parts[0].startswith(RESPONSE_SUCCESS):
                 raise ParseError(response, f"Expected {RESPONSE_SUCCESS}, got {parts[0]}")
 
+            # Detect outlet count from status string length
             outlets_str = parts[1]
-            if len(outlets_str) != NUM_OUTLETS:
-                raise ParseError(
-                    response,
-                    f"Expected {NUM_OUTLETS} outlet bits, got {len(outlets_str)}",
-                )
+            num_outlets = len(outlets_str)
 
-            # Parse outlets (remember: position 4=outlet1, position 0=outlet5)
+            if num_outlets == 0:
+                raise ParseError(response, "Outlet status string is empty")
+
+            # Parse outlets (reverse order: rightmost=outlet1, leftmost=outlet_N)
+            # Position (num_outlets - 1) = Outlet N
+            # Position (num_outlets - 2) = Outlet N-1
+            # ...
+            # Position 0 = Outlet 1
             outlets = {}
-            for outlet_num in OUTLET_RANGE:
-                pos = get_status_position(outlet_num)
+            for outlet_num in range(1, num_outlets + 1):
+                pos = num_outlets - outlet_num
                 outlets[outlet_num] = outlets_str[pos] == "1"
 
             # Parse current
@@ -335,7 +342,7 @@ class NetCommanderClient:
         """Get state of a specific outlet.
 
         Args:
-            outlet_number: Outlet number (1-5)
+            outlet_number: Outlet number (1-N)
 
         Returns:
             True if outlet is ON, False if OFF
@@ -344,11 +351,13 @@ class NetCommanderClient:
             InvalidOutletError: Outlet number out of range
             ConnectionError: Cannot reach device
         """
-        if outlet_number not in OUTLET_RANGE:
-            raise InvalidOutletError(outlet_number, NUM_OUTLETS)
-
         _LOGGER.debug("Getting state for outlet %d", outlet_number)
         status = await self.get_status()
+
+        # Validate outlet number based on actual device outlets
+        if outlet_number not in status.outlets:
+            raise InvalidOutletError(outlet_number, status.num_outlets)
+
         return status.outlets[outlet_number]
 
     async def set_outlet(self, outlet_number: int, state: bool) -> bool:
@@ -357,20 +366,19 @@ class NetCommanderClient:
         IMPORTANT: Uses $A3 command with SPACE syntax (not commas!)
 
         Args:
-            outlet_number: Outlet number (1-5)
+            outlet_number: Outlet number (1-N)
             state: True for ON, False for OFF
 
         Returns:
             True if command succeeded
 
         Raises:
-            InvalidOutletError: Outlet number out of range
+            InvalidOutletError: Outlet number out of range (validated by device response)
             CommandError: Command failed
             ConnectionError: Cannot reach device
         """
-        if outlet_number not in OUTLET_RANGE:
-            raise InvalidOutletError(outlet_number, NUM_OUTLETS)
-
+        # Note: No pre-validation of outlet number - device will reject invalid outlets
+        # This allows supporting devices with different outlet counts dynamically
         value = 1 if state else 0
         # CRITICAL: Use SPACE between arguments, not comma!
         command = f"{CMD_SET_OUTLET} {outlet_number} {value}"
@@ -386,7 +394,7 @@ class NetCommanderClient:
         """Turn outlet ON.
 
         Args:
-            outlet_number: Outlet number (1-5)
+            outlet_number: Outlet number (1-N)
 
         Returns:
             True if command succeeded
@@ -397,7 +405,7 @@ class NetCommanderClient:
         """Turn outlet OFF.
 
         Args:
-            outlet_number: Outlet number (1-5)
+            outlet_number: Outlet number (1-N)
 
         Returns:
             True if command succeeded
@@ -410,17 +418,15 @@ class NetCommanderClient:
         Uses rly command. Note: Less reliable than explicit set_outlet().
 
         Args:
-            outlet_number: Outlet number (1-5)
+            outlet_number: Outlet number (1-N)
 
         Returns:
             True if command succeeded
 
         Raises:
-            InvalidOutletError: Outlet number out of range
+            InvalidOutletError: Outlet number out of range (validated by device response)
         """
-        if outlet_number not in OUTLET_RANGE:
-            raise InvalidOutletError(outlet_number, NUM_OUTLETS)
-
+        # Note: No pre-validation - device will reject invalid outlets
         rly_index = get_rly_index(outlet_number)
         command = f"{CMD_TOGGLE_OUTLET}={rly_index}"
 
@@ -436,8 +442,10 @@ class NetCommanderClient:
             Dict of outlet_number → success (bool)
         """
         _LOGGER.info("Turning all outlets ON")
+        # Get current status to determine outlet count
+        status = await self.get_status()
         results = {}
-        for outlet in OUTLET_RANGE:
+        for outlet in status.outlets.keys():
             try:
                 results[outlet] = await self.turn_on(outlet)
             except Exception as e:
@@ -452,8 +460,10 @@ class NetCommanderClient:
             Dict of outlet_number → success (bool)
         """
         _LOGGER.info("Turning all outlets OFF")
+        # Get current status to determine outlet count
+        status = await self.get_status()
         results = {}
-        for outlet in OUTLET_RANGE:
+        for outlet in status.outlets.keys():
             try:
                 results[outlet] = await self.turn_off(outlet)
             except Exception as e:

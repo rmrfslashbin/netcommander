@@ -1,6 +1,7 @@
 """Data update coordinator for NetCommander."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -94,7 +95,6 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
             # Turn off
             await self.client.turn_off(outlet_number)
             # Wait 5 seconds
-            import asyncio
             await asyncio.sleep(5)
             # Turn on
             result = await self.client.turn_on(outlet_number)
