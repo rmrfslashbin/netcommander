@@ -84,6 +84,13 @@ home-assistant_v2.db-*
 debug_*.py
 uv.lock
 
+# Release artifacts
+netcommander-v*.zip
+
+# Test/development scripts (kept in repo for reference but not tracked if modified)
+test_*.py
+outlet_mapping_results_*.json
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

@@ -9,12 +9,13 @@ Complete control solution for Synaccess netCommander/netBooter Power Distributio
 ## Features
 
 ### Home Assistant Integration
+- **Dynamic Outlet Detection**: Automatically detects outlet count (5, 8, or other configurations)
 - **Switch Entities**: Control each outlet individually (ON/OFF)
 - **Sensor Entities**: Monitor total current, temperature, and active outlet count
 - **Button Entities**: Reboot outlets (power cycle: off → wait → on)
 - **Device Info**: View model, firmware version, hardware version, and MAC address
-- **Real-time Updates**: Configurable polling interval (default: 30 seconds)
-- **UI Configuration**: Easy setup through Home Assistant's UI
+- **Configurable Polling**: Adjust update interval from 10-300 seconds (default: 30s)
+- **UI Configuration**: Easy setup and reconfiguration through Home Assistant's UI
 
 ### CLI Tool
 - **Interactive Commands**: Control outlets, monitor status, view device info
@@ -37,8 +38,12 @@ Complete control solution for Synaccess netCommander/netBooter Power Distributio
   - Hardware: 4.3
 
 **Potentially Compatible:**
+- NP-05xxxx series (5 outlets) - Should work automatically
+- NP-08xxxx series (8 outlets) - Should work automatically via dynamic detection
 - Other Synaccess netCommander models
 - netBooter series PDUs
+
+**Dynamic Outlet Detection:** The integration automatically detects the number of outlets on your device and creates the appropriate entities. No configuration needed!
 
 *Please report your device compatibility results via GitHub issues!*
 
@@ -51,6 +56,7 @@ Complete control solution for Synaccess netCommander/netBooter Power Distributio
 3. Restart Home Assistant
 4. Add integration: Settings → Devices & Services → Add Integration → "Synaccess NetCommander"
 5. Enter device IP, username (default: `admin`), and password
+6. (Optional) Configure polling interval: Click "Configure" on the integration card
 
 ### CLI
 
@@ -102,20 +108,42 @@ netcommander info
 
 ## Home Assistant Entities
 
-After adding the integration, you'll get:
+After adding the integration, you'll automatically get:
 
-### Switches (5)
-- `switch.netcommander_outlet_1` through `switch.netcommander_outlet_5`
+### Switches (Dynamic)
+- `switch.netcommander_outlet_1` through `switch.netcommander_outlet_N`
 - Control individual outlets
+- **Number of switches matches your device's outlet count automatically**
 
 ### Sensors (3)
 - `sensor.netcommander_total_current` - Total current draw in Amps
 - `sensor.netcommander_temperature` - Device temperature in °C
 - `sensor.netcommander_outlets_on` - Count of powered outlets
 
-### Buttons (5)
-- `button.netcommander_reboot_outlet_1` through `button.netcommander_reboot_outlet_5`
+### Buttons (Dynamic)
+- `button.netcommander_reboot_outlet_1` through `button.netcommander_reboot_outlet_N`
 - Power cycle outlets (useful for rebooting connected devices)
+- **Number of buttons matches your device's outlet count automatically**
+
+### Configuration Options
+
+To adjust settings after initial setup:
+1. Go to Settings → Devices & Services
+2. Find your NetCommander device
+3. Click "Configure"
+4. Update:
+   - **IP Address**: Change if device IP changed
+   - **Username/Password**: Update credentials
+   - **Scan Interval**: Adjust polling frequency (10-300 seconds)
+
+### Example Automations
+
+See [AUTOMATIONS.md](AUTOMATIONS.md) for example Home Assistant automations including:
+- Scheduled power management
+- High current alerts and load shedding
+- Automatic device reboots on failure
+- Integration with lights and other smart home devices
+- And much more!
 
 ## API Usage
 
