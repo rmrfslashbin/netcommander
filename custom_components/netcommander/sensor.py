@@ -102,6 +102,7 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
             "model": device_info.model if device_info else "Unknown",
             "sw_version": device_info.firmware_version if device_info else None,
             "hw_version": device_info.hardware_version if device_info else None,
+            "configuration_url": f"http://{coordinator.host}",
             "connections": {("mac", device_info.mac_address)} if device_info and device_info.mac_address else set(),
         }
 
