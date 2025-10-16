@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*.*.*.*'  # Triggers on version tags like v2025.10.17.0
+      - 'v*'  # Triggers on any version tags starting with v
 
 permissions:
   contents: write  # Required to create releases
