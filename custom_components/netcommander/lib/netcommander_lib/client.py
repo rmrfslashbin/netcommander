@@ -1,5 +1,6 @@
 """Async HTTP client for Synaccess netCommander API."""
 
+import asyncio
 import logging
 import re
 from typing import Optional
@@ -146,6 +147,8 @@ class NetCommanderClient:
 
                 return response
 
+        except asyncio.TimeoutError as e:
+            raise ConnectionError(self.host, f"Connection timeout after {self.timeout}s")
         except aiohttp.ClientConnectorError as e:
             raise ConnectionError(self.host, f"Connection failed: {e}")
         except aiohttp.ClientError as e:

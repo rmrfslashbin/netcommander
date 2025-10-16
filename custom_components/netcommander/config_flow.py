@@ -51,7 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         }
     except AuthenticationError as err:
         raise InvalidAuth from err
-    except NetCommanderConnectionError as err:
+    except (NetCommanderConnectionError, TimeoutError) as err:
         raise CannotConnect from err
     finally:
         await client.close()
