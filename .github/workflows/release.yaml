@@ -1,0 +1,160 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'  # Triggers on version tags like v2025.10.17.0
+
+permissions:
+  contents: write  # Required to create releases
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Verify version consistency
+        run: |
+          # Check pyproject.toml version matches tag
+          PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          MANIFEST_VERSION=$(grep '"version":' custom_components/netcommander/manifest.json | cut -d'"' -f4)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+
+          echo "Tag version: $TAG_VERSION"
+          echo "pyproject.toml version: $PYPROJECT_VERSION"
+          echo "manifest.json version: $MANIFEST_VERSION"
+
+          if [ "$PYPROJECT_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ Error: pyproject.toml version ($PYPROJECT_VERSION) doesn't match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+          if [ "$MANIFEST_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ Error: manifest.json version ($MANIFEST_VERSION) doesn't match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+          echo "✅ All versions match: $TAG_VERSION"
+
+      - name: Build release artifact
+        run: |
+          cd custom_components
+
+          # Create zip WITHOUT Python bytecode or cache
+          zip -r ../netcommander-${{ steps.version.outputs.tag }}.zip netcommander \
+            -x "*.pyc" \
+            -x "*/__pycache__/*" \
+            -x "*.pyo" \
+            -x "*/.DS_Store" \
+            -x "*.pyd"
+
+          cd ..
+
+          # Verify zip was created
+          if [ ! -f "netcommander-${{ steps.version.outputs.tag }}.zip" ]; then
+            echo "❌ Error: Zip file was not created"
+            exit 1
+          fi
+
+          # Show zip contents (first 30 lines)
+          echo "📦 Zip contents:"
+          unzip -l "netcommander-${{ steps.version.outputs.tag }}.zip" | head -30
+
+          # Get zip size
+          ZIP_SIZE=$(ls -lh "netcommander-${{ steps.version.outputs.tag }}.zip" | awk '{print $5}')
+          echo "📊 Zip size: $ZIP_SIZE"
+
+      - name: Verify zip integrity
+        run: |
+          # Test zip file
+          unzip -t "netcommander-${{ steps.version.outputs.tag }}.zip"
+
+          # Ensure no bytecode in zip
+          if unzip -l "netcommander-${{ steps.version.outputs.tag }}.zip" | grep -q "__pycache__"; then
+            echo "❌ Error: Zip contains __pycache__ directories"
+            exit 1
+          fi
+
+          if unzip -l "netcommander-${{ steps.version.outputs.tag }}.zip" | grep -q "\.pyc"; then
+            echo "❌ Error: Zip contains .pyc files"
+            exit 1
+          fi
+
+          echo "✅ Zip integrity verified"
+
+      - name: Extract release notes from tag
+        id: release_notes
+        run: |
+          # Get the tag annotation message
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ steps.version.outputs.tag }})
+
+          # If tag message is empty, create default notes
+          if [ -z "$TAG_MESSAGE" ]; then
+            TAG_MESSAGE="Release ${{ steps.version.outputs.tag }}
+
+See https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^)...${{ steps.version.outputs.tag }} for changes."
+          fi
+
+          # Save to file (multiline)
+          cat > release_notes.txt << 'EOFNOTES'
+$TAG_MESSAGE
+
+## 📦 Installation
+
+### Via HACS (Recommended)
+1. Go to HACS → Integrations
+2. Find "Synaccess NetCommander"
+3. Click "Update" (or "Download" if new installation)
+4. Restart Home Assistant
+
+### Manual Installation
+1. Download \`netcommander-${{ steps.version.outputs.tag }}.zip\`
+2. Extract to \`custom_components/netcommander/\`
+3. Restart Home Assistant
+
+## 🔗 Links
+- [Full Changelog](https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^)...${{ steps.version.outputs.tag }})
+- [Documentation](https://github.com/${{ github.repository }}#readme)
+- [Report Issues](https://github.com/${{ github.repository }}/issues)
+
+---
+
+🤖 Automated release via GitHub Actions
+EOFNOTES
+
+          echo "Release notes prepared"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: netcommander-${{ steps.version.outputs.tag }}.zip
+          body_path: release_notes.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true  # Auto-generate from commits
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          echo "🎉 Release ${{ steps.version.outputs.tag }} created successfully!"
+          echo ""
+          echo "📦 Artifact: netcommander-${{ steps.version.outputs.tag }}.zip"
+          echo "🔗 URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}"
+          echo ""
+          echo "✅ HACS will detect this release within 1-2 hours"
