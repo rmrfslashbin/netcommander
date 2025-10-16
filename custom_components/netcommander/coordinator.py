@@ -1,13 +1,14 @@
 """Data update coordinator for NetCommander."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
 import sys
 import os
 
-# Add bundled lib to path for netcommander library
+# Add bundled lib to path BEFORE any other imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
+
+from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
