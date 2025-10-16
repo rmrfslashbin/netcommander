@@ -110,32 +110,32 @@ jobs:
 See https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^)...${{ steps.version.outputs.tag }} for changes."
           fi
 
-          # Save to file (multiline)
-          cat > release_notes.txt << 'EOFNOTES'
-$TAG_MESSAGE
-
-## 📦 Installation
-
-### Via HACS (Recommended)
-1. Go to HACS → Integrations
-2. Find "Synaccess NetCommander"
-3. Click "Update" (or "Download" if new installation)
-4. Restart Home Assistant
-
-### Manual Installation
-1. Download \`netcommander-${{ steps.version.outputs.tag }}.zip\`
-2. Extract to \`custom_components/netcommander/\`
-3. Restart Home Assistant
-
-## 🔗 Links
-- [Full Changelog](https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^)...${{ steps.version.outputs.tag }})
-- [Documentation](https://github.com/${{ github.repository }}#readme)
-- [Report Issues](https://github.com/${{ github.repository }}/issues)
-
----
-
-🤖 Automated release via GitHub Actions
-EOFNOTES
+          # Save to file (multiline) - using echo to properly handle variable expansion
+          {
+            echo "$TAG_MESSAGE"
+            echo ""
+            echo "## 📦 Installation"
+            echo ""
+            echo "### Via HACS (Recommended)"
+            echo "1. Go to HACS → Integrations"
+            echo "2. Find \"Synaccess NetCommander\""
+            echo "3. Click \"Update\" (or \"Download\" if new installation)"
+            echo "4. Restart Home Assistant"
+            echo ""
+            echo "### Manual Installation"
+            echo "1. Download \`netcommander-${{ steps.version.outputs.tag }}.zip\`"
+            echo "2. Extract to \`custom_components/netcommander/\`"
+            echo "3. Restart Home Assistant"
+            echo ""
+            echo "## 🔗 Links"
+            echo "- [Full Changelog](https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^)...${{ steps.version.outputs.tag }})"
+            echo "- [Documentation](https://github.com/${{ github.repository }}#readme)"
+            echo "- [Report Issues](https://github.com/${{ github.repository }}/issues)"
+            echo ""
+            echo "---"
+            echo ""
+            echo "🤖 Automated release via GitHub Actions"
+          } > release_notes.txt
 
           echo "Release notes prepared"
 
