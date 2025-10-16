@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from netcommander import NetCommanderClient
-from netcommander.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
+from netcommander_lib import NetCommanderClient
+from netcommander_lib.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
 
 from .const import DOMAIN
 

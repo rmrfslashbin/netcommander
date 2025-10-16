@@ -2,6 +2,11 @@
 from __future__ import annotations
 
 import logging
+import sys
+import os
+
+# Add bundled lib to path FIRST, before any other imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform

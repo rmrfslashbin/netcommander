@@ -13,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from netcommander import NetCommanderClient, DeviceStatus, DeviceInfo
-from netcommander.exceptions import NetCommanderError
+from netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
+from netcommander_lib.exceptions import NetCommanderError
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
