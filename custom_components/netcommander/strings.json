@@ -19,5 +19,23 @@
     "abort": {
       "already_configured": "This device is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Device Settings",
+        "description": "Update the connection details for your NetCommander device. Changes will take effect after saving.",
+        "data": {
+          "host": "IP Address or Hostname",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect with the new settings. Please check the IP address and network connection.",
+      "invalid_auth": "Invalid username or password.",
+      "unknown": "Unexpected error occurred."
+    }
   }
 }
