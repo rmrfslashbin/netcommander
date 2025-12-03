@@ -3,7 +3,9 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*'  # Triggers on any version tags starting with v
+      - 'v*'  # Triggers ONLY on version tags starting with v
+    branches-ignore:
+      - '**'  # Ignore all branch pushes
 
 permissions:
   contents: write  # Required to create releases
