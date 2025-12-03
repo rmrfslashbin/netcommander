@@ -13,7 +13,7 @@ from .exceptions import (
     CommandError,
 )
 
-__version__ = "2025.12.3"
+__version__ = "2025.12.3.1"
 __author__ = "Robert Sigler"
 __email__ = "code@sigler.io"
 
