@@ -65,6 +65,7 @@ DIAGNOSTIC_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="ip_address",
         name="IP Address",
         icon="mdi:ip-network",
+        entity_registry_enabled_default=True,  # Enable by default
         entity_category="diagnostic",
     ),
 )
