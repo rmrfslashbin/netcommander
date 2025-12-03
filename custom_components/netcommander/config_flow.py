@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .lib.netcommander_lib import NetCommanderClient
-from .lib.netcommander_lib.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
+from .lib.netcommander_lib.exceptions import AuthenticationError, NetCommanderConnectionError
 
 from .const import DOMAIN, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 
