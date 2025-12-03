@@ -60,12 +60,14 @@ SENSORS: tuple[NetCommanderSensorDescription, ...] = (
 )
 
 # IP Address sensor (static value, doesn't depend on status updates)
+# This appears as a sensor entity AND in device info (which creates clickable link)
 IP_ADDRESS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ip_address",
         name="IP Address",
         icon="mdi:ip-network",
-        entity_registry_enabled_default=True,  # Enable by default
+        entity_registry_enabled_default=True,
+        entity_category="diagnostic",
     ),
 )
 
