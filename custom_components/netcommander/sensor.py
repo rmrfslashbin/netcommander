@@ -137,10 +137,11 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
         return None
 
 
-class NetCommanderDiagnosticSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntity):
+class NetCommanderDiagnosticSensor(SensorEntity):
     """Representation of a NetCommander diagnostic sensor."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False  # Static value, no polling needed
 
     def __init__(
         self,
@@ -149,7 +150,7 @@ class NetCommanderDiagnosticSensor(CoordinatorEntity[NetCommanderCoordinator], S
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the diagnostic sensor."""
-        super().__init__(coordinator)
+        self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
@@ -171,9 +172,10 @@ class NetCommanderDiagnosticSensor(CoordinatorEntity[NetCommanderCoordinator], S
 
         self._attr_device_info = device_info_dict
 
+        # Set the static value
+        self._attr_native_value = coordinator.host
+
     @property
     def native_value(self) -> Any:
         """Return the state of the diagnostic sensor."""
-        if self.entity_description.key == "ip_address":
-            return self.coordinator.host
-        return None
+        return self._attr_native_value
