@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .lib.netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
 from .lib.netcommander_lib.exceptions import NetCommanderError
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_COMMAND_DELAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,8 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
         """Turn on an outlet."""
         try:
             result = await self.client.turn_on(outlet_number)
+            # Give device time to process the command before refreshing state
+            await asyncio.sleep(DEFAULT_COMMAND_DELAY)
             await self.async_request_refresh()
             return result
         except NetCommanderError as err:
@@ -83,6 +85,8 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
         """Turn off an outlet."""
         try:
             result = await self.client.turn_off(outlet_number)
+            # Give device time to process the command before refreshing state
+            await asyncio.sleep(DEFAULT_COMMAND_DELAY)
             await self.async_request_refresh()
             return result
         except NetCommanderError as err:
