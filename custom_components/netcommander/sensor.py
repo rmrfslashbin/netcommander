@@ -59,14 +59,13 @@ SENSORS: tuple[NetCommanderSensorDescription, ...] = (
     ),
 )
 
-# Diagnostic sensor (doesn't depend on status updates)
-DIAGNOSTIC_SENSORS: tuple[SensorEntityDescription, ...] = (
+# IP Address sensor (static value, doesn't depend on status updates)
+IP_ADDRESS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ip_address",
         name="IP Address",
         icon="mdi:ip-network",
         entity_registry_enabled_default=True,  # Enable by default
-        entity_category="diagnostic",
     ),
 )
 
@@ -85,10 +84,10 @@ async def async_setup_entry(
         for description in SENSORS
     ]
 
-    # Create diagnostic sensors
+    # Create IP address sensor
     entities.extend([
-        NetCommanderDiagnosticSensor(coordinator, entry, description)
-        for description in DIAGNOSTIC_SENSORS
+        NetCommanderIPAddressSensor(coordinator, entry, description)
+        for description in IP_ADDRESS_SENSORS
     ])
 
     async_add_entities(entities)
@@ -137,8 +136,8 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
         return None
 
 
-class NetCommanderDiagnosticSensor(SensorEntity):
-    """Representation of a NetCommander diagnostic sensor."""
+class NetCommanderIPAddressSensor(SensorEntity):
+    """Representation of a NetCommander IP address sensor."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False  # Static value, no polling needed
