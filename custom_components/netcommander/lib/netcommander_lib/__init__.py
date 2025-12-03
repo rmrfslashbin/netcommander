@@ -9,11 +9,11 @@ from .models import DeviceStatus, OutletState, OutletConfig, DeviceInfo
 from .exceptions import (
     NetCommanderError,
     AuthenticationError,
-    ConnectionError,
+    NetCommanderConnectionError,
     CommandError,
 )
 
-__version__ = "2025.10.15"
+__version__ = "2025.12.3"
 __author__ = "Robert Sigler"
 __email__ = "code@sigler.io"
 
@@ -25,6 +25,6 @@ __all__ = [
     "DeviceInfo",
     "NetCommanderError",
     "AuthenticationError",
-    "ConnectionError",
+    "NetCommanderConnectionError",
     "CommandError",
 ]

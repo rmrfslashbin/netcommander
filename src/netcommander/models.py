@@ -1,14 +1,13 @@
 """Data models for netCommander API client."""
 
 from typing import Optional
-from datetime import datetime
 from pydantic import BaseModel, Field, validator
 
 
 class OutletState(BaseModel):
     """State of a single outlet."""
 
-    outlet_number: int = Field(ge=1, le=5, description="Outlet number (1-5)")
+    outlet_number: int = Field(ge=1, description="Outlet number (1-N)")
     is_on: bool = Field(description="Outlet power state (True=ON, False=OFF)")
 
     class Config:
@@ -18,14 +17,14 @@ class OutletState(BaseModel):
 class OutletConfig(BaseModel):
     """Configuration for an outlet."""
 
-    outlet_number: int = Field(ge=1, le=5)
+    outlet_number: int = Field(ge=1, description="Outlet number (1-N)")
     name: Optional[str] = Field(default=None, description="Friendly name")
     description: Optional[str] = Field(default=None, description="Description")
 
     @validator("outlet_number")
     def validate_outlet_number(cls, v: int) -> int:
-        if not 1 <= v <= 5:
-            raise ValueError(f"Outlet number must be 1-5, got {v}")
+        if v < 1:
+            raise ValueError(f"Outlet number must be >= 1, got {v}")
         return v
 
 

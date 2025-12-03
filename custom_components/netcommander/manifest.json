@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/rmrfslashbin/netcommander/issues",
   "requirements": ["aiohttp>=3.9.0", "pydantic>=1.10.0"],
-  "version": "2025.10.16.5"
+  "version": "2025.12.3"
 }

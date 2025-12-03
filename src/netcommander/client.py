@@ -9,7 +9,7 @@ import aiohttp
 from .models import DeviceStatus, OutletState, DeviceInfo
 from .exceptions import (
     AuthenticationError,
-    ConnectionError,
+    NetCommanderConnectionError,
     CommandError,
     InvalidOutletError,
     ParseError,
@@ -116,7 +116,7 @@ class NetCommanderClient:
             Response text from device
 
         Raises:
-            ConnectionError: Cannot reach device
+            NetCommanderConnectionError: Cannot reach device
             AuthenticationError: Invalid credentials
             CommandError: Command failed
         """
@@ -133,7 +133,7 @@ class NetCommanderClient:
                     )
 
                 if resp.status != 200:
-                    raise ConnectionError(
+                    raise NetCommanderConnectionError(
                         self.host, f"HTTP {resp.status}: {resp.reason}"
                     )
 
@@ -148,11 +148,11 @@ class NetCommanderClient:
                 return response
 
         except asyncio.TimeoutError as e:
-            raise ConnectionError(self.host, f"Connection timeout after {self.timeout}s")
+            raise NetCommanderConnectionError(self.host, f"Connection timeout after {self.timeout}s")
         except aiohttp.ClientConnectorError as e:
-            raise ConnectionError(self.host, f"Connection failed: {e}")
+            raise NetCommanderConnectionError(self.host, f"Connection failed: {e}")
         except aiohttp.ClientError as e:
-            raise ConnectionError(self.host, f"Request error: {e}")
+            raise NetCommanderConnectionError(self.host, f"Request error: {e}")
 
     def _parse_status_response(self, response: str) -> DeviceStatus:
         """Parse status response into DeviceStatus model.
@@ -226,7 +226,7 @@ class NetCommanderClient:
             DeviceStatus with outlet states, current, and temperature
 
         Raises:
-            ConnectionError: Cannot reach device
+            NetCommanderConnectionError: Cannot reach device
             AuthenticationError: Invalid credentials
             ParseError: Cannot parse response
         """
@@ -304,7 +304,7 @@ class NetCommanderClient:
             DeviceInfo with model, versions, and MAC address
 
         Raises:
-            ConnectionError: Cannot reach device
+            NetCommanderConnectionError: Cannot reach device
             AuthenticationError: Invalid credentials
             ParseError: Cannot parse response
         """
@@ -349,7 +349,7 @@ class NetCommanderClient:
 
         Raises:
             InvalidOutletError: Outlet number out of range
-            ConnectionError: Cannot reach device
+            NetCommanderConnectionError: Cannot reach device
         """
         _LOGGER.debug("Getting state for outlet %d", outlet_number)
         status = await self.get_status()
@@ -375,7 +375,7 @@ class NetCommanderClient:
         Raises:
             InvalidOutletError: Outlet number out of range (validated by device response)
             CommandError: Command failed
-            ConnectionError: Cannot reach device
+            NetCommanderConnectionError: Cannot reach device
         """
         # Note: No pre-validation of outlet number - device will reject invalid outlets
         # This allows supporting devices with different outlet counts dynamically

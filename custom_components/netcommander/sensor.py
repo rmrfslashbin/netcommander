@@ -59,6 +59,16 @@ SENSORS: tuple[NetCommanderSensorDescription, ...] = (
     ),
 )
 
+# Diagnostic sensor (doesn't depend on status updates)
+DIAGNOSTIC_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="ip_address",
+        name="IP Address",
+        icon="mdi:ip-network",
+        entity_category="diagnostic",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -68,10 +78,17 @@ async def async_setup_entry(
     """Set up NetCommander sensors."""
     coordinator: NetCommanderCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # Create status sensors
     entities = [
         NetCommanderSensor(coordinator, entry, description)
         for description in SENSORS
     ]
+
+    # Create diagnostic sensors
+    entities.extend([
+        NetCommanderDiagnosticSensor(coordinator, entry, description)
+        for description in DIAGNOSTIC_SENSORS
+    ])
 
     async_add_entities(entities)
 
@@ -95,7 +112,7 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
 
         # Device info
         device_info = coordinator.device_info
-        self._attr_device_info = {
+        device_info_dict = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": f"{MANUFACTURER} {device_info.model if device_info else 'NetCommander'}",
             "manufacturer": MANUFACTURER,
@@ -105,9 +122,57 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
             "configuration_url": f"http://{coordinator.host}",
         }
 
+        # Add MAC address connection if available
+        if device_info and device_info.mac_address:
+            device_info_dict["connections"] = {("mac", device_info.mac_address)}
+
+        self._attr_device_info = device_info_dict
+
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
         if self.coordinator.data and self.entity_description.value_fn:
             return self.entity_description.value_fn(self.coordinator.data)
+        return None
+
+
+class NetCommanderDiagnosticSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntity):
+    """Representation of a NetCommander diagnostic sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: NetCommanderCoordinator,
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the diagnostic sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+
+        # Device info
+        device_info = coordinator.device_info
+        device_info_dict = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": f"{MANUFACTURER} {device_info.model if device_info else 'NetCommander'}",
+            "manufacturer": MANUFACTURER,
+            "model": device_info.model if device_info else "Unknown",
+            "sw_version": device_info.firmware_version if device_info else None,
+            "hw_version": device_info.hardware_version if device_info else None,
+            "configuration_url": f"http://{coordinator.host}",
+        }
+
+        # Add MAC address connection if available
+        if device_info and device_info.mac_address:
+            device_info_dict["connections"] = {("mac", device_info.mac_address)}
+
+        self._attr_device_info = device_info_dict
+
+    @property
+    def native_value(self) -> Any:
+        """Return the state of the diagnostic sensor."""
+        if self.entity_description.key == "ip_address":
+            return self.coordinator.host
         return None

@@ -15,7 +15,7 @@ class AuthenticationError(NetCommanderError):
         super().__init__(self.message)
 
 
-class ConnectionError(NetCommanderError):
+class NetCommanderConnectionError(NetCommanderError):
     """Raised when cannot connect to device."""
 
     def __init__(self, host: str, message: str = "Cannot connect to device"):

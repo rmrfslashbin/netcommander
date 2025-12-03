@@ -58,7 +58,7 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntit
 
         # Device info
         device_info = coordinator.device_info
-        self._attr_device_info = {
+        device_info_dict = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": f"{MANUFACTURER} {device_info.model if device_info else 'NetCommander'}",
             "manufacturer": MANUFACTURER,
@@ -67,6 +67,12 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntit
             "hw_version": device_info.hardware_version if device_info else None,
             "configuration_url": f"http://{coordinator.host}",
         }
+
+        # Add MAC address connection if available
+        if device_info and device_info.mac_address:
+            device_info_dict["connections"] = {("mac", device_info.mac_address)}
+
+        self._attr_device_info = device_info_dict
 
     @property
     def is_on(self) -> bool:

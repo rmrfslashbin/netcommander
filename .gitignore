@@ -87,9 +87,10 @@ uv.lock
 # Release artifacts
 netcommander-v*.zip
 
-# Test/development scripts (kept in repo for reference but not tracked if modified)
-test_*.py
+# Test/development scripts (temporary test files, not actual test suite)
+# NOTE: The tests/ directory test files are tracked
 outlet_mapping_results_*.json
+debug_test_*.py
 
 # Jupyter Notebook
 .ipynb_checkpoints
