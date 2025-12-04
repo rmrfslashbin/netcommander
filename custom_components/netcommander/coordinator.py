@@ -72,14 +72,10 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
     async def async_turn_on(self, outlet_number: int) -> bool:
         """Turn on an outlet."""
         try:
-            _LOGGER.warning("COORDINATOR: Turning ON outlet %d", outlet_number)
             result = await self.client.turn_on(outlet_number)
             # Give device time to process the command before refreshing state
             await asyncio.sleep(DEFAULT_COMMAND_DELAY)
-            _LOGGER.warning("COORDINATOR: Refreshing state after turning ON outlet %d", outlet_number)
             await self.async_refresh()  # Wait for refresh to complete
-            if self.data:
-                _LOGGER.warning("COORDINATOR: State after refresh: outlets=%s", self.data.outlets)
             return result
         except NetCommanderError as err:
             _LOGGER.error("Failed to turn on outlet %d: %s", outlet_number, err)
@@ -88,14 +84,10 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
     async def async_turn_off(self, outlet_number: int) -> bool:
         """Turn off an outlet."""
         try:
-            _LOGGER.warning("COORDINATOR: Turning OFF outlet %d", outlet_number)
             result = await self.client.turn_off(outlet_number)
             # Give device time to process the command before refreshing state
             await asyncio.sleep(DEFAULT_COMMAND_DELAY)
-            _LOGGER.warning("COORDINATOR: Refreshing state after turning OFF outlet %d", outlet_number)
             await self.async_refresh()  # Wait for refresh to complete
-            if self.data:
-                _LOGGER.warning("COORDINATOR: State after refresh: outlets=%s", self.data.outlets)
             return result
         except NetCommanderError as err:
             _LOGGER.error("Failed to turn off outlet %d: %s", outlet_number, err)
