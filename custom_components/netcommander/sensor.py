@@ -87,10 +87,13 @@ async def async_setup_entry(
     ]
 
     # Create IP address sensor
-    entities.extend([
+    ip_sensors = [
         NetCommanderIPAddressSensor(coordinator, entry, description)
         for description in IP_ADDRESS_SENSORS
-    ])
+    ]
+    entities.extend(ip_sensors)
+
+    _LOGGER.info("Setting up %d sensors (%d status + %d IP)", len(entities), len(SENSORS), len(ip_sensors))
 
     async_add_entities(entities)
 
@@ -150,7 +153,7 @@ class NetCommanderIPAddressSensor(SensorEntity):
         entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize the diagnostic sensor."""
+        """Initialize the IP address sensor."""
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -175,6 +178,7 @@ class NetCommanderIPAddressSensor(SensorEntity):
 
         # Set the static value
         self._attr_native_value = coordinator.host
+        _LOGGER.info("Created IP address sensor with unique_id=%s, value=%s", self._attr_unique_id, self._attr_native_value)
 
     @property
     def native_value(self) -> Any:
