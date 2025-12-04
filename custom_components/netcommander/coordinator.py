@@ -77,7 +77,7 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
             # Give device time to process the command before refreshing state
             await asyncio.sleep(DEFAULT_COMMAND_DELAY)
             _LOGGER.warning("COORDINATOR: Refreshing state after turning ON outlet %d", outlet_number)
-            await self.async_request_refresh()
+            await self.async_refresh()  # Wait for refresh to complete
             if self.data:
                 _LOGGER.warning("COORDINATOR: State after refresh: outlets=%s", self.data.outlets)
             return result
@@ -93,7 +93,7 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
             # Give device time to process the command before refreshing state
             await asyncio.sleep(DEFAULT_COMMAND_DELAY)
             _LOGGER.warning("COORDINATOR: Refreshing state after turning OFF outlet %d", outlet_number)
-            await self.async_request_refresh()
+            await self.async_refresh()  # Wait for refresh to complete
             if self.data:
                 _LOGGER.warning("COORDINATOR: State after refresh: outlets=%s", self.data.outlets)
             return result
@@ -110,7 +110,7 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
             await asyncio.sleep(5)
             # Turn on
             result = await self.client.turn_on(outlet_number)
-            await self.async_request_refresh()
+            await self.async_refresh()  # Wait for refresh to complete
             return result
         except NetCommanderError as err:
             _LOGGER.error("Failed to reboot outlet %d: %s", outlet_number, err)
