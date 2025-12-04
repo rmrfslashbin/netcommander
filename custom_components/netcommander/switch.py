@@ -78,7 +78,11 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntit
     def is_on(self) -> bool:
         """Return true if outlet is on."""
         if self.coordinator.data:
-            return self.coordinator.data.outlets.get(self.outlet_number, False)
+            state = self.coordinator.data.outlets.get(self.outlet_number, False)
+            _LOGGER.info("Outlet %d state check: %s (all outlets: %s)",
+                        self.outlet_number, state, self.coordinator.data.outlets)
+            return state
+        _LOGGER.warning("Outlet %d state check: No coordinator data available", self.outlet_number)
         return False
 
     @property
