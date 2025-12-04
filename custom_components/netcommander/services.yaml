@@ -1,0 +1,69 @@
+# Services for Synaccess NetCommander integration
+
+turn_on:
+  name: Turn on outlet
+  description: Turn on a specific outlet by number
+  target:
+    device:
+      integration: netcommander
+  fields:
+    outlet_number:
+      name: Outlet number
+      description: The outlet number to turn on (1-N)
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 8
+          mode: box
+
+turn_off:
+  name: Turn off outlet
+  description: Turn off a specific outlet by number
+  target:
+    device:
+      integration: netcommander
+  fields:
+    outlet_number:
+      name: Outlet number
+      description: The outlet number to turn off (1-N)
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 8
+          mode: box
+
+reboot:
+  name: Reboot outlet
+  description: Reboot an outlet (turn off, wait, turn on)
+  target:
+    device:
+      integration: netcommander
+  fields:
+    outlet_number:
+      name: Outlet number
+      description: The outlet number to reboot (1-N)
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 8
+          mode: box
+
+turn_on_all:
+  name: Turn on all outlets
+  description: Turn on all outlets on the device
+  target:
+    device:
+      integration: netcommander
+
+turn_off_all:
+  name: Turn off all outlets
+  description: Turn off all outlets on the device
+  target:
+    device:
+      integration: netcommander

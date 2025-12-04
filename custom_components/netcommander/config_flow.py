@@ -15,7 +15,13 @@ from homeassistant.exceptions import HomeAssistantError
 from .lib.netcommander_lib import NetCommanderClient
 from .lib.netcommander_lib.exceptions import AuthenticationError, NetCommanderConnectionError
 
-from .const import DOMAIN, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .const import (
+    DOMAIN,
+    CONF_SCAN_INTERVAL,
+    CONF_REBOOT_DELAY,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_REBOOT_DELAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,8 +122,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Extract scan_interval for options
+            # Extract options (scan_interval, reboot_delay)
             scan_interval = user_input.pop(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            reboot_delay = user_input.pop(CONF_REBOOT_DELAY, DEFAULT_REBOOT_DELAY)
 
             # Validate the new credentials
             try:
@@ -134,9 +141,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=user_input,
-                    options={CONF_SCAN_INTERVAL: scan_interval},
+                    options={
+                        CONF_SCAN_INTERVAL: scan_interval,
+                        CONF_REBOOT_DELAY: reboot_delay,
+                    },
                 )
-                # Reload the integration to apply new scan interval
+                # Reload the integration to apply new settings
                 await self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 return self.async_create_entry(title="", data={})
 
@@ -146,6 +156,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         current_password = self.config_entry.data.get(CONF_PASSWORD, "")
         current_scan_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        current_reboot_delay = self.config_entry.options.get(
+            CONF_REBOOT_DELAY, DEFAULT_REBOOT_DELAY
         )
 
         return self.async_show_form(
@@ -158,6 +171,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_SCAN_INTERVAL, default=current_scan_interval
                     ): vol.All(vol.Coerce(int), vol.Range(min=10, max=300)),
+                    vol.Optional(
+                        CONF_REBOOT_DELAY, default=current_reboot_delay
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
                 }
             ),
             errors=errors,

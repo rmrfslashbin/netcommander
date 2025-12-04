@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .lib.netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
 from .lib.netcommander_lib.exceptions import NetCommanderError
 
-from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_COMMAND_DELAY, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_COMMAND_DELAY, DEFAULT_REBOOT_DELAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
         username: str,
         password: str,
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
+        reboot_delay: int = DEFAULT_REBOOT_DELAY,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -38,6 +39,7 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
         self.host = host
         self.username = username
         self.password = password
+        self.reboot_delay = reboot_delay
         self.client = NetCommanderClient(host, username, password)
         self.device_info: DeviceInfo | None = None
 
@@ -98,8 +100,8 @@ class NetCommanderCoordinator(DataUpdateCoordinator[DeviceStatus]):
         try:
             # Turn off
             await self.client.turn_off(outlet_number)
-            # Wait 5 seconds
-            await asyncio.sleep(5)
+            # Wait configured delay
+            await asyncio.sleep(self.reboot_delay)
             # Turn on
             result = await self.client.turn_on(outlet_number)
             await self.async_refresh()  # Wait for refresh to complete
