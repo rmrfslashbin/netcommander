@@ -21,6 +21,8 @@ from .const import (
 )
 from .coordinator import NetCommanderCoordinator
 
+__version__ = "2025.12.4.2"
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR, Platform.BUTTON]

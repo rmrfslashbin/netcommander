@@ -60,13 +60,19 @@ SENSORS: tuple[NetCommanderSensorDescription, ...] = (
     ),
 )
 
-# IP Address sensor (static value, doesn't depend on status updates)
-# This appears as a sensor entity AND in device info (which creates clickable link)
-IP_ADDRESS_SENSORS: tuple[SensorEntityDescription, ...] = (
+# Diagnostic sensors (static values, don't depend on status updates)
+DIAGNOSTIC_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ip_address",
         name="IP Address",
         icon="mdi:ip-network",
+        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="version",
+        name="Integration Version",
+        icon="mdi:information-outline",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -87,14 +93,14 @@ async def async_setup_entry(
         for description in SENSORS
     ]
 
-    # Create IP address sensor
-    ip_sensors = [
-        NetCommanderIPAddressSensor(coordinator, entry, description)
-        for description in IP_ADDRESS_SENSORS
+    # Create diagnostic sensors (IP address, version)
+    diagnostic_sensors = [
+        NetCommanderDiagnosticSensor(coordinator, entry, description)
+        for description in DIAGNOSTIC_SENSORS
     ]
-    entities.extend(ip_sensors)
+    entities.extend(diagnostic_sensors)
 
-    _LOGGER.info("Setting up %d sensors (%d status + %d IP)", len(entities), len(SENSORS), len(ip_sensors))
+    _LOGGER.info("Setting up %d sensors (%d status + %d diagnostic)", len(entities), len(SENSORS), len(diagnostic_sensors))
 
     async_add_entities(entities)
 
@@ -142,8 +148,8 @@ class NetCommanderSensor(CoordinatorEntity[NetCommanderCoordinator], SensorEntit
         return None
 
 
-class NetCommanderIPAddressSensor(SensorEntity):
-    """Representation of a NetCommander IP address sensor."""
+class NetCommanderDiagnosticSensor(SensorEntity):
+    """Representation of a NetCommander diagnostic sensor."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False  # Static value, no polling needed
@@ -154,7 +160,7 @@ class NetCommanderIPAddressSensor(SensorEntity):
         entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize the IP address sensor."""
+        """Initialize the diagnostic sensor."""
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -177,9 +183,16 @@ class NetCommanderIPAddressSensor(SensorEntity):
 
         self._attr_device_info = device_info_dict
 
-        # Set the static value
-        self._attr_native_value = coordinator.host
-        _LOGGER.info("Created IP address sensor with unique_id=%s, value=%s", self._attr_unique_id, self._attr_native_value)
+        # Set the static value based on sensor type
+        if description.key == "ip_address":
+            self._attr_native_value = coordinator.host
+        elif description.key == "version":
+            # Import version from package
+            from . import __version__
+            self._attr_native_value = __version__
+
+        _LOGGER.info("Created diagnostic sensor %s with unique_id=%s, value=%s",
+                    description.key, self._attr_unique_id, self._attr_native_value)
 
     @property
     def native_value(self) -> Any:
