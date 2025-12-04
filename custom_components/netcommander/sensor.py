@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .lib.netcommander_lib import DeviceStatus
@@ -67,7 +68,7 @@ IP_ADDRESS_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="IP Address",
         icon="mdi:ip-network",
         entity_registry_enabled_default=True,
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
