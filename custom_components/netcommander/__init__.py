@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR, Platform.BUTTON]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synaccess netCommander from a config entry."""
-    _LOGGER.debug("Setting up netCommander integration")
+    _LOGGER.warning("=== NetCommander Integration v2025.12.3.10 Loading ===")
 
     # Get scan_interval from options, fallback to default
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

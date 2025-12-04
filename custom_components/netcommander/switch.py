@@ -79,10 +79,10 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntit
         """Return true if outlet is on."""
         if self.coordinator.data:
             state = self.coordinator.data.outlets.get(self.outlet_number, False)
-            _LOGGER.info("Outlet %d state check: %s (all outlets: %s)",
+            _LOGGER.warning("SWITCH: Outlet %d state check: %s (all outlets: %s)",
                         self.outlet_number, state, self.coordinator.data.outlets)
             return state
-        _LOGGER.warning("Outlet %d state check: No coordinator data available", self.outlet_number)
+        _LOGGER.warning("SWITCH: Outlet %d state check: No coordinator data available", self.outlet_number)
         return False
 
     @property
@@ -94,8 +94,10 @@ class NetCommanderSwitch(CoordinatorEntity[NetCommanderCoordinator], SwitchEntit
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the outlet on."""
+        _LOGGER.warning("SWITCH: User requested turn ON outlet %d", self.outlet_number)
         await self.coordinator.async_turn_on(self.outlet_number)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the outlet off."""
+        _LOGGER.warning("SWITCH: User requested turn OFF outlet %d", self.outlet_number)
         await self.coordinator.async_turn_off(self.outlet_number)
