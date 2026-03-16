@@ -21,7 +21,7 @@ from .const import (
 )
 from .coordinator import NetCommanderCoordinator
 
-__version__ = "2025.12.4.2"
+__version__ = "2026.03.16"
 
 _LOGGER = logging.getLogger(__name__)
 
