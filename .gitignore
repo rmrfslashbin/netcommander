@@ -114,3 +114,5 @@ cython_debug/
 
 # Ruff cache
 .ruff_cache/
+# Local agent notes (repo is public on GitHub)
+CLAUDE.md
