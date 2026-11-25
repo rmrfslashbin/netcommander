@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026.11.25] - 2026-11-25
+
+### Fixed
+- Turning an outlet on, off or toggling it with a number below 1 now raises
+  `InvalidOutletError` and sends nothing to the device. Above the outlet count
+  from the last status read is rejected the same way; before any status read,
+  the device still decides.
+- `InvalidOutletError`'s message no longer assumes 5 outlets when the count is
+  unknown.
+- Connection and parse errors now chain their cause (`raise ... from`).
+
+### Changed
+- Unit tests repaired to match the current client and Home Assistant APIs
+  (two test files no longer imported and 19 tests failed; 53 now pass).
+- Lint clean under ruff; ruff config moved to `[tool.ruff.lint]`.
+- CI on the forge (code.rmrfslashbin.net) runs lint and unit tests on every PR.
+
 ## [2025.10.16.4] - 2025-10-16
 
 ### Added
