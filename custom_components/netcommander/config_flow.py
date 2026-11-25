@@ -5,22 +5,23 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .lib.netcommander_lib import NetCommanderClient
-from .lib.netcommander_lib.exceptions import AuthenticationError, NetCommanderConnectionError
-
 from .const import (
-    DOMAIN,
-    CONF_SCAN_INTERVAL,
     CONF_REBOOT_DELAY,
-    DEFAULT_SCAN_INTERVAL,
+    CONF_SCAN_INTERVAL,
     DEFAULT_REBOOT_DELAY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
+from .lib.netcommander_lib import NetCommanderClient
+from .lib.netcommander_lib.exceptions import (
+    AuthenticationError,
+    NetCommanderConnectionError,
 )
 
 _LOGGER = logging.getLogger(__name__)

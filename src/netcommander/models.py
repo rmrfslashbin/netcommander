@@ -1,6 +1,6 @@
 """Data models for netCommander API client."""
 
-from typing import Optional
+
 from pydantic import BaseModel, Field, validator
 
 
@@ -18,8 +18,8 @@ class OutletConfig(BaseModel):
     """Configuration for an outlet."""
 
     outlet_number: int = Field(ge=1, description="Outlet number (1-N)")
-    name: Optional[str] = Field(default=None, description="Friendly name")
-    description: Optional[str] = Field(default=None, description="Description")
+    name: str | None = Field(default=None, description="Friendly name")
+    description: str | None = Field(default=None, description="Description")
 
     @validator("outlet_number")
     def validate_outlet_number(cls, v: int) -> int:
@@ -32,16 +32,16 @@ class DeviceInfo(BaseModel):
     """Device hardware and firmware information."""
 
     model: str = Field(description="Device model number (e.g., NP0501DU)")
-    hardware_version: Optional[str] = Field(
+    hardware_version: str | None = Field(
         default=None, description="Hardware version"
     )
-    firmware_version: Optional[str] = Field(
+    firmware_version: str | None = Field(
         default=None, description="Firmware version"
     )
-    bootloader_version: Optional[str] = Field(
+    bootloader_version: str | None = Field(
         default=None, description="Bootloader version"
     )
-    mac_address: Optional[str] = Field(
+    mac_address: str | None = Field(
         default=None, description="MAC address"
     )
     raw_response: str = Field(description="Raw device response from $A8")
@@ -59,7 +59,7 @@ class DeviceStatus(BaseModel):
     total_current_amps: float = Field(
         ge=0.0, description="Total current draw in Amps"
     )
-    temperature: Optional[str] = Field(
+    temperature: str | None = Field(
         default=None, description="Temperature reading (may be 'XX' if unavailable)"
     )
     raw_response: str = Field(description="Raw device response")

@@ -1,18 +1,25 @@
 """Tests for Home Assistant config flow."""
-import pytest
-from unittest.mock import AsyncMock, patch
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from custom_components.netcommander.config_flow import ConfigFlow, CannotConnect, InvalidAuth
-from custom_components.netcommander.const import DOMAIN
-from netcommander import DeviceInfo
-from netcommander.exceptions import AuthenticationError, ConnectionError as NetCommanderConnectionError
+from custom_components.netcommander.config_flow import (
+    CannotConnect,
+    ConfigFlow,
+    InvalidAuth,
+)
+from custom_components.netcommander.lib.netcommander_lib import DeviceInfo
+from custom_components.netcommander.lib.netcommander_lib.exceptions import (
+    AuthenticationError,
+    NetCommanderConnectionError,
+)
 
 
 @pytest.fixture
@@ -21,6 +28,9 @@ def mock_hass():
     from unittest.mock import MagicMock
     hass = MagicMock()
     hass.data = {}
+    # No entry exists yet, so the unique-id check does not abort the flow.
+    hass.config_entries.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+    hass.config_entries.async_entries = MagicMock(return_value=[])
     return hass
 
 
@@ -43,6 +53,9 @@ class TestConfigFlow:
         """Test successful user step."""
         flow = ConfigFlow()
         flow.hass = mock_hass
+        # Outside HA's flow manager a flow's context is read-only; the manager
+        # gives it a dict, and async_set_unique_id writes into it.
+        flow.context = {"source": config_entries.SOURCE_USER}
 
         # Mock validate_input
         with patch(
@@ -141,7 +154,7 @@ class TestValidateInput:
         """Test successful validation."""
         from custom_components.netcommander.config_flow import validate_input
 
-        with patch("netcommander.NetCommanderClient") as mock_client_class:
+        with patch("custom_components.netcommander.config_flow.NetCommanderClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.get_device_info = AsyncMock(return_value=device_info)
             mock_client.close = AsyncMock()
@@ -174,7 +187,7 @@ class TestValidateInput:
             raw_response="$A0,NP0501DU, HW4.3 BL1.6 -7.72-8.5",
         )
 
-        with patch("netcommander.NetCommanderClient") as mock_client_class:
+        with patch("custom_components.netcommander.config_flow.NetCommanderClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.get_device_info = AsyncMock(return_value=device_info)
             mock_client.close = AsyncMock()
@@ -197,7 +210,7 @@ class TestValidateInput:
         """Test validation with authentication error."""
         from custom_components.netcommander.config_flow import validate_input
 
-        with patch("netcommander.NetCommanderClient") as mock_client_class:
+        with patch("custom_components.netcommander.config_flow.NetCommanderClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.get_device_info = AsyncMock(
                 side_effect=AuthenticationError("Invalid credentials")
@@ -220,7 +233,7 @@ class TestValidateInput:
         """Test validation with connection error."""
         from custom_components.netcommander.config_flow import validate_input
 
-        with patch("netcommander.NetCommanderClient") as mock_client_class:
+        with patch("custom_components.netcommander.config_flow.NetCommanderClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.get_device_info = AsyncMock(
                 side_effect=NetCommanderConnectionError("192.168.1.100", "Connection failed")

@@ -1,0 +1,32 @@
+# Forge CI: lint and unit tests on every push to main and every PR, so a
+# Renovate bump that breaks the integration fails a check. Gitea runs only
+# this folder when it exists; the HACS, hassfest and release workflows in
+# .github/workflows keep running on the GitHub mirror.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install (Home Assistant needs Python 3.13)
+        run: |
+          uv venv --python 3.13
+          uv pip install -e ".[dev,cli,ha]"
+      - name: Lint
+        run: make lint
+      - name: Unit tests
+        run: make test-unit

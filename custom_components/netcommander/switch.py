@@ -1,8 +1,8 @@
 """Switch platform for Synaccess NetCommander outlets."""
 from __future__ import annotations
 
-from typing import Any
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, ATTR_OUTLET_NUMBER
+from .const import ATTR_OUTLET_NUMBER, DOMAIN, MANUFACTURER
 from .coordinator import NetCommanderCoordinator
 
 _LOGGER = logging.getLogger(__name__)

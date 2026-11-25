@@ -6,15 +6,15 @@ Set environment variables to enable:
   NETCOMMANDER_PASSWORD=admin
   RUN_INTEGRATION_TESTS=1
 """
-import pytest
+import asyncio
 import os
 import sys
-import asyncio
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from netcommander import NetCommanderClient
-
 
 # Skip integration tests unless explicitly enabled
 pytestmark = pytest.mark.skipif(

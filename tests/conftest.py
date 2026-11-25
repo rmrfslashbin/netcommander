@@ -1,14 +1,14 @@
 """Pytest fixtures for NetCommander tests."""
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from aiohttp import ClientSession
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from netcommander import NetCommanderClient, DeviceStatus, DeviceInfo
+from netcommander import DeviceInfo, DeviceStatus, NetCommanderClient
 
 
 # Device info fixture

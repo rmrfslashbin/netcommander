@@ -12,16 +12,15 @@ Usage examples:
 """
 
 import asyncio
-import sys
-import os
 import json
-import yaml
-from typing import Optional
+import os
+import sys
 
 import click
+import yaml
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))

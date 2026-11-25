@@ -1,9 +1,10 @@
 """Tests for Home Assistant coordinator."""
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import timedelta
-import sys
 import os
+import sys
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -11,16 +12,21 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 # Import after path setup
 from custom_components.netcommander.coordinator import NetCommanderCoordinator
-from netcommander import DeviceStatus, DeviceInfo
-from netcommander.exceptions import NetCommanderError
+from custom_components.netcommander.lib.netcommander_lib.exceptions import (
+    NetCommanderError,
+)
 
 
-@pytest.fixture
-def hass():
-    """Mock Home Assistant instance."""
-    hass = MagicMock()
-    hass.data = {}
-    return hass
+@pytest.fixture(autouse=True)
+def no_command_delay():
+    """The coordinator sleeps between a command and its refresh; tests need not."""
+    with patch("custom_components.netcommander.coordinator.asyncio.sleep", new=AsyncMock()):
+        yield
+
+
+# `hass` is the real instance from pytest-homeassistant-custom-component. A
+# MagicMock stand-in no longer works: DataUpdateCoordinator needs HA's frame
+# helper, which only a real instance sets up.
 
 
 class TestNetCommanderCoordinator:
@@ -109,13 +115,13 @@ class TestNetCommanderCoordinator:
             password="admin",
         )
         coordinator.client = mock_client
-        coordinator.async_request_refresh = AsyncMock()
+        coordinator.async_refresh = AsyncMock()
 
         result = await coordinator.async_turn_on(1)
 
         assert result is True
         mock_client.turn_on.assert_called_once_with(1)
-        coordinator.async_request_refresh.assert_called_once()
+        coordinator.async_refresh.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_coordinator_turn_off(self, hass, mock_client):
@@ -127,13 +133,13 @@ class TestNetCommanderCoordinator:
             password="admin",
         )
         coordinator.client = mock_client
-        coordinator.async_request_refresh = AsyncMock()
+        coordinator.async_refresh = AsyncMock()
 
         result = await coordinator.async_turn_off(5)
 
         assert result is True
         mock_client.turn_off.assert_called_once_with(5)
-        coordinator.async_request_refresh.assert_called_once()
+        coordinator.async_refresh.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_coordinator_reboot_outlet(self, hass, mock_client):
@@ -145,7 +151,7 @@ class TestNetCommanderCoordinator:
             password="admin",
         )
         coordinator.client = mock_client
-        coordinator.async_request_refresh = AsyncMock()
+        coordinator.async_refresh = AsyncMock()
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             result = await coordinator.async_reboot_outlet(3)
@@ -153,7 +159,7 @@ class TestNetCommanderCoordinator:
         assert result is True
         mock_client.turn_off.assert_called_once_with(3)
         mock_client.turn_on.assert_called_once_with(3)
-        coordinator.async_request_refresh.assert_called_once()
+        coordinator.async_refresh.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_coordinator_shutdown(self, hass, mock_client):

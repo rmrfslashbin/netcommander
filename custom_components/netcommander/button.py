@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, ATTR_OUTLET_NUMBER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import NetCommanderCoordinator
 
 _LOGGER = logging.getLogger(__name__)

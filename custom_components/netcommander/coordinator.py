@@ -2,17 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .lib.netcommander_lib import NetCommanderClient, DeviceStatus, DeviceInfo
+from .const import (
+    DEFAULT_COMMAND_DELAY,
+    DEFAULT_REBOOT_DELAY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
+from .lib.netcommander_lib import DeviceInfo, DeviceStatus, NetCommanderClient
 from .lib.netcommander_lib.exceptions import NetCommanderError
-
-from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_COMMAND_DELAY, DEFAULT_REBOOT_DELAY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

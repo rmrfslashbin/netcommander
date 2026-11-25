@@ -1,9 +1,9 @@
 """Sensor platform for Synaccess NetCommander."""
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -15,14 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .lib.netcommander_lib import DeviceStatus
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import NetCommanderCoordinator
+from .lib.netcommander_lib import DeviceStatus
 
 _LOGGER = logging.getLogger(__name__)
 

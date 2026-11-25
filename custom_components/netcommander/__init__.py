@@ -5,19 +5,19 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    DOMAIN,
-    CONF_SCAN_INTERVAL,
-    CONF_REBOOT_DELAY,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_REBOOT_DELAY,
     ATTR_OUTLET_NUMBER,
+    CONF_REBOOT_DELAY,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_REBOOT_DELAY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 from .coordinator import NetCommanderCoordinator
 
@@ -47,7 +47,7 @@ SERVICE_REBOOT_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  # noqa: C901
     """Set up Synaccess netCommander from a config entry."""
     _LOGGER.debug("Setting up netCommander integration")
 

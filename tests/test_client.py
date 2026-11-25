@@ -1,17 +1,16 @@
 """Tests for NetCommander client."""
-import pytest
-from unittest.mock import AsyncMock, patch
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from netcommander import NetCommanderClient
 from netcommander.exceptions import (
     AuthenticationError,
-    ConnectionError,
     CommandError,
-    InvalidOutletError,
     ParseError,
 )
 
@@ -124,14 +123,20 @@ class TestNetCommanderClient:
                 assert result is True
 
     @pytest.mark.asyncio
-    async def test_invalid_outlet_number(self, connection_params):
-        """Test invalid outlet number raises error."""
-        async with NetCommanderClient(**connection_params) as client:
-            with pytest.raises(InvalidOutletError):
-                await client.turn_on(0)
+    async def test_invalid_outlet_number(self, connection_params, mock_session):
+        """An outlet the device does not have is rejected by the device.
 
-            with pytest.raises(InvalidOutletError):
-                await client.turn_on(6)
+        The client does not pre-validate outlet numbers (the count is detected
+        from the device, see set_outlet); it sends the command and reports the
+        device's refusal ($AF) as CommandError.
+        """
+        mock_session.get.return_value.__aenter__.return_value.text = AsyncMock(
+            return_value="$AF"
+        )
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            async with NetCommanderClient(**connection_params) as client:
+                with pytest.raises(CommandError):
+                    await client.turn_on(6)
 
     @pytest.mark.asyncio
     async def test_authentication_error(self, connection_params, mock_session):
@@ -159,7 +164,8 @@ class TestNetCommanderClient:
     async def test_turn_on_all(self, connection_params, mock_session):
         """Test turning on all outlets."""
         mock_session.get.return_value.__aenter__.return_value.text = AsyncMock(
-            return_value="$A0"
+            # get_status() first (it sets the outlet count), then one "$A0" per outlet
+            side_effect=["$A0,00000,0.00,XX"] + ["$A0"] * 5,
         )
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
@@ -173,7 +179,8 @@ class TestNetCommanderClient:
     async def test_turn_off_all(self, connection_params, mock_session):
         """Test turning off all outlets."""
         mock_session.get.return_value.__aenter__.return_value.text = AsyncMock(
-            return_value="$A0"
+            # get_status() first (it sets the outlet count), then one "$A0" per outlet
+            side_effect=["$A0,00000,0.00,XX"] + ["$A0"] * 5,
         )
 
         with patch("aiohttp.ClientSession", return_value=mock_session):

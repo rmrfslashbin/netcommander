@@ -1,33 +1,29 @@
 """Async HTTP client for Synaccess netCommander API."""
 
-import asyncio
 import logging
 import re
-from typing import Optional
+
 import aiohttp
 
-from .models import DeviceStatus, OutletState, DeviceInfo
-from .exceptions import (
-    AuthenticationError,
-    NetCommanderConnectionError,
-    CommandError,
-    InvalidOutletError,
-    ParseError,
-)
 from .const import (
     CMD_ENDPOINT,
-    CMD_GET_STATUS,
     CMD_GET_INFO,
+    CMD_GET_STATUS,
     CMD_SET_OUTLET,
     CMD_TOGGLE_OUTLET,
-    RESPONSE_SUCCESS,
-    RESPONSE_FAILED,
-    NUM_OUTLETS,
-    OUTLET_RANGE,
-    get_status_position,
-    get_rly_index,
     DEFAULT_TIMEOUT,
+    RESPONSE_FAILED,
+    RESPONSE_SUCCESS,
+    get_rly_index,
 )
+from .exceptions import (
+    AuthenticationError,
+    CommandError,
+    InvalidOutletError,
+    NetCommanderConnectionError,
+    ParseError,
+)
+from .models import DeviceInfo, DeviceStatus
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +48,7 @@ class NetCommanderClient:
         password: str,
         port: int = 80,
         timeout: int = DEFAULT_TIMEOUT,
-        session: Optional[aiohttp.ClientSession] = None,
+        session: aiohttp.ClientSession | None = None,
     ):
         """Initialize the client.
 
@@ -147,12 +143,12 @@ class NetCommanderClient:
 
                 return response
 
-        except asyncio.TimeoutError as e:
-            raise NetCommanderConnectionError(self.host, f"Connection timeout after {self.timeout}s")
+        except TimeoutError as err:
+            raise NetCommanderConnectionError(self.host, f"Connection timeout after {self.timeout}s") from err
         except aiohttp.ClientConnectorError as e:
-            raise NetCommanderConnectionError(self.host, f"Connection failed: {e}")
+            raise NetCommanderConnectionError(self.host, f"Connection failed: {e}") from e
         except aiohttp.ClientError as e:
-            raise NetCommanderConnectionError(self.host, f"Request error: {e}")
+            raise NetCommanderConnectionError(self.host, f"Request error: {e}") from e
 
     def _parse_status_response(self, response: str) -> DeviceStatus:
         """Parse status response into DeviceStatus model.
@@ -203,8 +199,8 @@ class NetCommanderClient:
             # Parse current
             try:
                 current = float(parts[2])
-            except ValueError:
-                raise ParseError(response, f"Invalid current value: {parts[2]}")
+            except ValueError as err:
+                raise ParseError(response, f"Invalid current value: {parts[2]}") from err
 
             # Parse temperature (may be 'XX')
             temperature = parts[3] if len(parts) > 3 else None
@@ -217,7 +213,7 @@ class NetCommanderClient:
             )
 
         except IndexError as e:
-            raise ParseError(response, f"Index error: {e}")
+            raise ParseError(response, f"Index error: {e}") from e
 
     async def get_status(self) -> DeviceStatus:
         """Get current status of all outlets and device metrics.
@@ -295,7 +291,7 @@ class NetCommanderClient:
             )
 
         except IndexError as e:
-            raise ParseError(response, f"Index error: {e}")
+            raise ParseError(response, f"Index error: {e}") from e
 
     async def get_device_info(self) -> DeviceInfo:
         """Get device hardware and firmware information.
@@ -373,7 +369,8 @@ class NetCommanderClient:
             True if command succeeded
 
         Raises:
-            InvalidOutletError: Outlet number out of range (validated by device response)
+            CommandError: The device refused the command, e.g. an outlet
+            number it does not have (it is not pre-validated)
             CommandError: Command failed
             NetCommanderConnectionError: Cannot reach device
         """
@@ -424,7 +421,8 @@ class NetCommanderClient:
             True if command succeeded
 
         Raises:
-            InvalidOutletError: Outlet number out of range (validated by device response)
+            CommandError: The device refused the command, e.g. an outlet
+            number it does not have (it is not pre-validated)
         """
         # Note: No pre-validation - device will reject invalid outlets
         rly_index = get_rly_index(outlet_number)

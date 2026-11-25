@@ -41,11 +41,21 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "B", "C90", "UP"]
 ignore = ["E501"]  # Line too long (handled by black)
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.pep8-naming]
+# pydantic validators take the class as their first argument
+classmethod-decorators = ["validator", "pydantic.validator"]
+
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Unused imports in __init__.py
+# Home Assistant's convention for config-flow errors is CannotConnect/InvalidAuth
+"custom_components/netcommander/config_flow.py" = ["N818"]
+# tests put src/ on sys.path before importing the package
+"tests/*" = ["E402"]
 
 [tool.black]
 line-length = 88

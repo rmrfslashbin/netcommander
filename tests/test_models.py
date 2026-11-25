@@ -1,11 +1,13 @@
 """Tests for NetCommander data models."""
-import pytest
-import sys
 import os
+import sys
+
+import pytest
+from pydantic import ValidationError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from netcommander.models import DeviceStatus, DeviceInfo, OutletState
+from netcommander.models import DeviceInfo, DeviceStatus, OutletState
 
 
 class TestDeviceStatus:
@@ -143,8 +145,13 @@ class TestOutletState:
 
     def test_outlet_state_invalid_number(self):
         """Test OutletState with invalid outlet number."""
-        with pytest.raises(Exception):  # Pydantic validation error
+        # Outlet numbers start at 1. There is no fixed upper bound: the outlet
+        # count is detected from the device (dynamic outlet detection), and the
+        # client checks a number against it (test_invalid_outlet_number).
+        with pytest.raises(ValidationError):
             OutletState(outlet_number=0, is_on=True)
 
-        with pytest.raises(Exception):
-            OutletState(outlet_number=6, is_on=False)
+        with pytest.raises(ValidationError):
+            OutletState(outlet_number=-1, is_on=False)
+
+        assert OutletState(outlet_number=8, is_on=False).outlet_number == 8
