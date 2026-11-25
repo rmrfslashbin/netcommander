@@ -11,6 +11,7 @@ from netcommander import NetCommanderClient
 from netcommander.exceptions import (
     AuthenticationError,
     CommandError,
+    InvalidOutletError,
     ParseError,
 )
 
@@ -124,11 +125,35 @@ class TestNetCommanderClient:
 
     @pytest.mark.asyncio
     async def test_invalid_outlet_number(self, connection_params, mock_session):
-        """An outlet the device does not have is rejected by the device.
+        """Outlet numbers below 1 are rejected before anything is sent."""
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            async with NetCommanderClient(**connection_params) as client:
+                for bad in (0, -1):
+                    with pytest.raises(InvalidOutletError):
+                        await client.turn_on(bad)
+                mock_session.get.assert_not_called()
 
-        The client does not pre-validate outlet numbers (the count is detected
-        from the device, see set_outlet); it sends the command and reports the
-        device's refusal ($AF) as CommandError.
+    @pytest.mark.asyncio
+    async def test_outlet_above_known_count(self, connection_params, mock_session):
+        """After a status read (5 outlets), outlet 6 is rejected without sending."""
+        mock_session.get.return_value.__aenter__.return_value.text = AsyncMock(
+            return_value="$A0,00000,0.00,XX"
+        )
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            async with NetCommanderClient(**connection_params) as client:
+                await client.get_status()
+                calls = mock_session.get.call_count
+                with pytest.raises(InvalidOutletError):
+                    await client.turn_off(6)
+                assert mock_session.get.call_count == calls
+
+    @pytest.mark.asyncio
+    async def test_outlet_above_unknown_count(self, connection_params, mock_session):
+        """With no status read yet, an out-of-range number goes to the device.
+
+        UNVERIFIED against hardware: "$AF" as the device's answer for an outlet
+        it does not have is assumed, not observed. It is the documented failure
+        code, which the client turns into CommandError.
         """
         mock_session.get.return_value.__aenter__.return_value.text = AsyncMock(
             return_value="$AF"

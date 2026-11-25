@@ -37,10 +37,11 @@ class CommandError(NetCommanderError):
 class InvalidOutletError(NetCommanderError):
     """Raised when outlet number is out of range."""
 
-    def __init__(self, outlet: int, max_outlets: int = 5):
+    def __init__(self, outlet: int, max_outlets: int | None = 5):
         self.outlet = outlet
         self.max_outlets = max_outlets
-        self.message = f"Invalid outlet number: {outlet} (must be 1-{max_outlets})"
+        bound = f"1-{max_outlets}" if max_outlets is not None else ">= 1"
+        self.message = f"Invalid outlet number: {outlet} (must be {bound})"
         super().__init__(self.message)
 
 

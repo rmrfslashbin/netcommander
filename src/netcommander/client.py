@@ -70,6 +70,8 @@ class NetCommanderClient:
         self._external_session = session is not None
         self._session = session
         self._auth = aiohttp.BasicAuth(username, password)
+        # Outlet count from the last status read; None until one succeeds.
+        self._num_outlets: int | None = None
 
         _LOGGER.debug(
             "Initialized NetCommanderClient for %s:%d", self.host, self.port
@@ -228,7 +230,9 @@ class NetCommanderClient:
         """
         _LOGGER.info("Getting device status")
         response = await self._send_command(CMD_GET_STATUS)
-        return self._parse_status_response(response)
+        status = self._parse_status_response(response)
+        self._num_outlets = status.num_outlets
+        return status
 
     def _parse_device_info_response(self, response: str) -> DeviceInfo:
         """Parse device info response into DeviceInfo model.
@@ -356,6 +360,18 @@ class NetCommanderClient:
 
         return status.outlets[outlet_number]
 
+    def _validate_outlet_number(self, outlet_number: int) -> None:
+        """Reject an outlet number that cannot be valid, before sending it.
+
+        Below 1 is never valid. The upper bound is the outlet count detected
+        by the last status read (devices differ), so it is checked only once
+        a status has been read; until then the device decides.
+        """
+        if outlet_number < 1 or (
+            self._num_outlets is not None and outlet_number > self._num_outlets
+        ):
+            raise InvalidOutletError(outlet_number, self._num_outlets)
+
     async def set_outlet(self, outlet_number: int, state: bool) -> bool:
         """Set outlet to explicit ON or OFF state.
 
@@ -369,13 +385,14 @@ class NetCommanderClient:
             True if command succeeded
 
         Raises:
-            CommandError: The device refused the command, e.g. an outlet
-            number it does not have (it is not pre-validated)
-            CommandError: Command failed
+            InvalidOutletError: outlet_number is below 1, or above the outlet
+                count from the last status read. Nothing is sent.
+            CommandError: The device refused the command. With no status read
+                yet the count is unknown, so an out-of-range number is sent
+                and left to the device.
             NetCommanderConnectionError: Cannot reach device
         """
-        # Note: No pre-validation of outlet number - device will reject invalid outlets
-        # This allows supporting devices with different outlet counts dynamically
+        self._validate_outlet_number(outlet_number)
         value = 1 if state else 0
         # CRITICAL: Use SPACE between arguments, not comma!
         command = f"{CMD_SET_OUTLET} {outlet_number} {value}"
