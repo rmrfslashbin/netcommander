@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.4.0
       - name: Install (Home Assistant needs Python 3.13)
         run: |
           uv venv --python 3.13
